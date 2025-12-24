@@ -1,5 +1,6 @@
 import * as React from "react";
 import { Outlet, createRootRoute } from "@tanstack/react-router";
+import { GlobalTopNavigation } from "../components/global-top-navigation";
 
 export const Route = createRootRoute({
   component: RootComponent,
@@ -8,7 +9,7 @@ export const Route = createRootRoute({
 function RootComponent() {
   return (
     <React.Fragment>
-      <div>Hello "__root"!</div>
+      <GlobalTopNavigation />
       <Outlet />
     </React.Fragment>
   );
