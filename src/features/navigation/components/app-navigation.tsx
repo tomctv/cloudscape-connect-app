@@ -1,9 +1,9 @@
 import { TopNavigation } from "@cloudscape-design/components";
-import { LogOutIcon } from "../icons/log-out";
-import { CalendarsIcon } from "../icons/calendars";
-import { UsersIcon } from "../icons/users";
+import { LogOutIcon } from "@/components/icons/log-out";
+import { UsersIcon } from "@/components/icons/users";
+import { CalendarsIcon } from "@/components/icons/calendars";
 
-export const GlobalTopNavigation: React.FC = () => {
+export const AppNavigation: React.FC = () => {
   return (
     <div id="h" style={{ position: "sticky", top: 0, zIndex: 1002 }}>
       <TopNavigation
@@ -12,7 +12,7 @@ export const GlobalTopNavigation: React.FC = () => {
           title: "Connect+",
           logo: {
             src: "src/assets/app-logo-small.svg",
-            alt: "Application",
+            alt: "Connect+",
           },
         }}
         utilities={[
@@ -22,6 +22,38 @@ export const GlobalTopNavigation: React.FC = () => {
             text: "Search",
             ariaLabel: "Customer search",
             disableUtilityCollapse: true,
+          },
+          {
+            type: "menu-dropdown",
+            iconName: "grid-view",
+            ariaLabel: "Actions",
+            title: "Actions",
+            items: [
+              {
+                id: "action-new-quote",
+                text: "New quote",
+                iconName: "add-plus",
+                ariaLabel: "New quote",
+              },
+              {
+                id: "action-new-quote-home",
+                text: "New quote Home",
+                iconName: "add-plus",
+                ariaLabel: "New quote Home",
+              },
+              {
+                id: "action-search-ivass-quote",
+                text: "Search Ivass quote",
+                iconName: "search",
+                ariaLabel: "Search Ivass quote",
+              },
+              {
+                id: "action-search-commission",
+                text: "Search commission",
+                iconName: "search",
+                ariaLabel: "Search commission",
+              },
+            ],
           },
           {
             type: "menu-dropdown",
