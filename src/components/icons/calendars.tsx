@@ -3,8 +3,8 @@ export const CalendarsIcon = () => {
     <svg
       xmlns="http://www.w3.org/2000/svg"
       viewBox="0 0 24 24"
-      stroke-linecap="round"
-      stroke-linejoin="round"
+      strokeLinecap="round"
+      strokeLinejoin="round"
     >
       <path d="M12 2v2" className="stroke-linejoin-round" />
       <path

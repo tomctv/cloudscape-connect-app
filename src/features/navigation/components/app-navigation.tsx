@@ -2,6 +2,7 @@ import { TopNavigation } from "@cloudscape-design/components";
 import { LogOutIcon } from "@/components/icons/log-out";
 import { UsersIcon } from "@/components/icons/users";
 import { CalendarsIcon } from "@/components/icons/calendars";
+import { TabNavigation } from "./tab-navigation/tab-navigation";
 
 export const AppNavigation: React.FC = () => {
   return (
@@ -119,6 +120,7 @@ export const AppNavigation: React.FC = () => {
           },
         ]}
       />
+      <TabNavigation />
     </div>
   );
 };

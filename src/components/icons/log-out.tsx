@@ -3,8 +3,8 @@ export const LogOutIcon = () => {
     <svg
       xmlns="http://www.w3.org/2000/svg"
       viewBox="0 0 24 24"
-      stroke-linecap="round"
-      stroke-linejoin="round"
+      strokeLinecap="round"
+      strokeLinejoin="round"
     >
       <path d="m16 17 5-5-5-5" className="stroke-linejoin-round" />
       <path d="M21 12H9" className="stroke-linejoin-round" />
