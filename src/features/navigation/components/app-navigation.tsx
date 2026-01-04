@@ -3,8 +3,12 @@ import { LogOutIcon } from "@/components/icons/log-out";
 import { UsersIcon } from "@/components/icons/users";
 import { CalendarsIcon } from "@/components/icons/calendars";
 import { TabNavigation } from "./tab-navigation/tab-navigation";
+import type { BaseNavigationDetail } from "node_modules/@cloudscape-design/components/internal/events";
+import { useNavigate } from "@tanstack/react-router";
 
 export const AppNavigation: React.FC = () => {
+  const navigate = useNavigate();
+
   return (
     <div id="h" style={{ position: "sticky", top: 0, zIndex: 1002 }}>
       <TopNavigation
@@ -23,6 +27,11 @@ export const AppNavigation: React.FC = () => {
             text: "Search",
             ariaLabel: "Customer search",
             disableUtilityCollapse: true,
+            href: "/customers/search",
+            onFollow: (event: CustomEvent<BaseNavigationDetail>) => {
+              event.preventDefault();
+              navigate({ to: "/customers/search" });
+            },
           },
           {
             type: "menu-dropdown",
