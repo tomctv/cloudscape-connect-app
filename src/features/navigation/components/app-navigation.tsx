@@ -9,7 +9,7 @@ export const AppNavigation: React.FC = () => {
     <div id="h" style={{ position: "sticky", top: 0, zIndex: 1002 }}>
       <TopNavigation
         identity={{
-          href: "",
+          href: "/",
           title: "Connect+",
           logo: {
             src: "src/assets/app-logo-small.svg",
