@@ -1,9 +1,13 @@
 import { CalculatorIcon } from "@/components/icons/calculator";
 import { Header, SegmentedControl } from "@cloudscape-design/components";
-import { useState } from "react";
+import { getRouteApi, useNavigate } from "@tanstack/react-router";
+import type { CustomerSearchParams } from "../schemas/customer-search-params.schema";
+
+const routeApi = getRouteApi("/customers/search");
 
 export const CustomersTableHeader: React.FC = () => {
-  const [selectedId, setSelectedId] = useState("contractor");
+  const routeSearch = routeApi.useSearch();
+  const navigate = useNavigate({ from: "/customers/search" });
 
   return (
     <Header
@@ -17,8 +21,14 @@ export const CustomersTableHeader: React.FC = () => {
       }
       actions={
         <SegmentedControl
-          selectedId={selectedId}
-          onChange={({ detail }) => setSelectedId(detail.selectedId)}
+          selectedId={routeSearch.mode}
+          onChange={({ detail }) =>
+            navigate({
+              search: {
+                mode: detail.selectedId as CustomerSearchParams["mode"],
+              },
+            })
+          }
           label="Search by"
           options={[
             {

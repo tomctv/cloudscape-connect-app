@@ -2,10 +2,12 @@ import { CustomersTable } from "@/features/customer-search/components/customers-
 import { CustomersTableFilter } from "@/features/customer-search/components/customers-table-filter";
 import { CustomersTableHeader } from "@/features/customer-search/components/customers-table-header";
 import type { CustomerResult } from "@/features/customer-search/schemas/customer-result.schema";
+import { CustomerSearchParamsSchema } from "@/features/customer-search/schemas/customer-search-params.schema";
 import { Box } from "@cloudscape-design/components";
 import { createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/customers/search")({
+  validateSearch: CustomerSearchParamsSchema,
   component: RouteComponent,
 });
 
