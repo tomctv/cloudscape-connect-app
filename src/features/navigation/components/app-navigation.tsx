@@ -10,7 +10,7 @@ export const AppNavigation: React.FC = () => {
   const navigate = useNavigate();
 
   return (
-    <div id="h" style={{ position: "sticky", top: 0, zIndex: 1002 }}>
+    <div id="app-header" style={{ position: "sticky", top: 0, zIndex: 1002 }}>
       <TopNavigation
         identity={{
           href: "/",
