@@ -10,6 +10,8 @@ import { CustomerStatusIndicator } from "@/components/customer-status-indicator"
 import { CustomerDetailsLink } from "./customer-details-link";
 import { useCollectionPreferences } from "@/features/collection-preferences/hooks/use-collection-preferences";
 import { CustomCollectionPreferences } from "@/features/collection-preferences/components/custom-collection-preferences";
+import { getRouteApi, useNavigate } from "@tanstack/react-router";
+import { useLayoutContext } from "@/features/layout/hooks/use-layout-context";
 
 interface CustomersTableProps {
   header: React.ReactNode;
@@ -17,15 +19,22 @@ interface CustomersTableProps {
   customers: CustomerResult[];
 }
 
+const routeApi = getRouteApi("/customers/search");
+
 export const CustomersTable: React.FC<CustomersTableProps> = ({
   header,
   filter,
   customers,
 }) => {
+  const routeSearch = routeApi.useSearch();
+  const navigate = useNavigate({ from: "/customers/search" });
+  const { headerHeight } = useLayoutContext();
+
   const { preferences, setPreferences } =
     useCollectionPreferences<CustomerResult>(
       "customer-search-table-preferences",
       {
+        pageSize: routeSearch.limit,
         contentDisplay: [
           { id: "firstName", visible: true },
           { id: "lastName", visible: true },
@@ -43,6 +52,7 @@ export const CustomersTable: React.FC<CustomersTableProps> = ({
     <Table
       variant="full-page"
       stickyHeader
+      stickyHeaderVerticalOffset={headerHeight + 12}
       header={header}
       filter={filter}
       pagination={<Pagination currentPageIndex={1} pagesCount={2} />}
@@ -122,7 +132,14 @@ export const CustomersTable: React.FC<CustomersTableProps> = ({
       preferences={
         <CustomCollectionPreferences
           preferences={preferences}
-          onConfirm={setPreferences}
+          onConfirm={(newPreferences) => {
+            setPreferences(newPreferences);
+            if (newPreferences.pageSize !== routeSearch.limit) {
+              navigate({
+                search: { limit: newPreferences.pageSize, offset: 0 },
+              });
+            }
+          }}
           pageSizeValues={[25, 50, 100]}
           showWrapLinesPreference
           showStripedRowsPreference
