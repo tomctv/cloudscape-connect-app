@@ -5,14 +5,20 @@ import type { CustomerSearchParams } from "../schemas/customer-search-params.sch
 
 const routeApi = getRouteApi("/customers/search");
 
-export const CustomersTableHeader: React.FC = () => {
+interface CustomersTableHeaderProps {
+  count?: number;
+}
+
+export const CustomersTableHeader: React.FC<CustomersTableHeaderProps> = ({
+  count,
+}) => {
   const routeSearch = routeApi.useSearch();
   const navigate = useNavigate({ from: "/customers/search" });
 
   return (
     <Header
       variant="awsui-h1-sticky"
-      counter={"(6)"}
+      counter={count && `(${count})`}
       description={
         <span>
           Find customers choosing between <b>contractor</b>, <b>quote</b> or{" "}

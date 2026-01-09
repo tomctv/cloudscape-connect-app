@@ -1,7 +1,9 @@
 import z from "zod/v4";
 
-export const CustomerResultSchema = z.object({
-  id: z.string(),
+export const CustomerSearchResultSchema = z.object({
+  id: z
+    .union([z.string(), z.number()])
+    .transform((value) => (typeof value === "number" ? String(value) : value)),
   firstName: z.string().nullable(),
   lastName: z.string(),
   status: z.enum(["client", "prospect"]).nullable(),
@@ -9,8 +11,8 @@ export const CustomerResultSchema = z.object({
   residenceProvince: z.string().nullable(),
   birthDate: z.string().nullable(),
   gender: z.enum(["F", "M"]).nullable(),
-  birthPlace: z.string().nullable(),
-  primaryPhone: z.string().nullable(),
+  birthPlace: z.string().nullish(),
+  primaryPhone: z.string().nullish(),
   // secondaryPhone: z.string().nullable(),
   // contactPreference: z
   //   .enum(["email", "primaryPhone", "secondaryPhone"])
@@ -26,4 +28,15 @@ export const CustomerResultSchema = z.object({
   // isLifeClient: z.boolean().nullable(),
 });
 
-export type CustomerResult = z.infer<typeof CustomerResultSchema>;
+export type CustomerSearchResult = z.infer<typeof CustomerSearchResultSchema>;
+
+export const CustomerSearchResponseSchema = z.object({
+  data: z.array(CustomerSearchResultSchema),
+  total: z.number().int().nonnegative(),
+  limit: z.number().int().positive(),
+  offset: z.number().int().nonnegative(),
+});
+
+export type CustomerSearchResponse = z.infer<
+  typeof CustomerSearchResponseSchema
+>;

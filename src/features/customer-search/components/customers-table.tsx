@@ -5,7 +5,7 @@ import {
   SpaceBetween,
   Table,
 } from "@cloudscape-design/components";
-import type { CustomerResult } from "../schemas/customer-result.schema";
+import type { CustomerSearchResult } from "../schemas/customer-result.schema";
 import { CustomerStatusIndicator } from "@/components/customer-status-indicator";
 import { CustomerDetailsLink } from "./customer-details-link";
 import { useCollectionPreferences } from "@/features/collection-preferences/hooks/use-collection-preferences";
@@ -16,7 +16,7 @@ import { useLayoutContext } from "@/features/layout/hooks/use-layout-context";
 interface CustomersTableProps {
   header: React.ReactNode;
   filter: React.ReactNode;
-  customers: CustomerResult[];
+  customers: CustomerSearchResult[];
 }
 
 const routeApi = getRouteApi("/customers/search");
@@ -31,7 +31,7 @@ export const CustomersTable: React.FC<CustomersTableProps> = ({
   const { headerHeight } = useLayoutContext();
 
   const { preferences, setPreferences } =
-    useCollectionPreferences<CustomerResult>(
+    useCollectionPreferences<CustomerSearchResult>(
       "customer-search-table-preferences",
       {
         pageSize: routeSearch.limit,
@@ -88,7 +88,7 @@ export const CustomersTable: React.FC<CustomersTableProps> = ({
         {
           id: "birthPlace",
           header: "Birth place",
-          cell: (item) => item.birthPlace || "",
+          cell: (item) => item.birthPlace || "-",
         },
         {
           id: "status",
