@@ -1,3 +1,4 @@
+import { EmptyState } from "@/components/empty-state";
 import { useGetCustomers } from "@/features/customer-search/api/use-get-customers";
 import { CustomersTable } from "@/features/customer-search/components/customers-table";
 import { CustomersTableFilter } from "@/features/customer-search/components/customers-table-filter";
@@ -14,14 +15,17 @@ export const Route = createFileRoute("/customers/search")({
 function RouteComponent() {
   const routeSearch = Route.useSearch();
 
-  const { data: customersData } = useGetCustomers(routeSearch);
+  const { data: customersData, isLoading } = useGetCustomers(routeSearch);
 
   return (
     <Box padding={{ horizontal: "l", vertical: "s" }}>
       <CustomersTable
         header={<CustomersTableHeader count={customersData?.total} />}
         filter={<CustomersTableFilter />}
+        empty={<EmptyState heading="No customers" />}
         customers={customersData?.data ?? []}
+        totalItemsCount={customersData?.total}
+        isLoading={isLoading}
       />
     </Box>
   );

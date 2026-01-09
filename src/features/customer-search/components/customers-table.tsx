@@ -1,10 +1,4 @@
-import {
-  Box,
-  Button,
-  Pagination,
-  SpaceBetween,
-  Table,
-} from "@cloudscape-design/components";
+import { Pagination, Table } from "@cloudscape-design/components";
 import type { CustomerSearchResult } from "../schemas/customer-result.schema";
 import { CustomerStatusIndicator } from "@/components/customer-status-indicator";
 import { CustomerDetailsLink } from "./customer-details-link";
@@ -16,7 +10,10 @@ import { useLayoutContext } from "@/features/layout/hooks/use-layout-context";
 interface CustomersTableProps {
   header: React.ReactNode;
   filter: React.ReactNode;
+  empty: React.ReactNode;
   customers: CustomerSearchResult[];
+  isLoading: boolean;
+  totalItemsCount?: number;
 }
 
 const routeApi = getRouteApi("/customers/search");
@@ -24,7 +21,10 @@ const routeApi = getRouteApi("/customers/search");
 export const CustomersTable: React.FC<CustomersTableProps> = ({
   header,
   filter,
+  empty,
   customers,
+  isLoading,
+  totalItemsCount,
 }) => {
   const routeSearch = routeApi.useSearch();
   const navigate = useNavigate({ from: "/customers/search" });
@@ -57,17 +57,11 @@ export const CustomersTable: React.FC<CustomersTableProps> = ({
       filter={filter}
       pagination={<Pagination currentPageIndex={1} pagesCount={2} />}
       enableKeyboardNavigation
+      totalItemsCount={totalItemsCount}
       renderAriaLive={({ firstIndex, lastIndex, totalItemsCount }) =>
         `Displaying items ${firstIndex} to ${lastIndex} of ${totalItemsCount}`
       }
-      empty={
-        <Box margin={{ vertical: "xs" }} textAlign="center" color="inherit">
-          <SpaceBetween size="m">
-            <b>No resources</b>
-            <Button>Create resource</Button>
-          </SpaceBetween>
-        </Box>
-      }
+      empty={empty}
       columnDefinitions={[
         {
           id: "firstName",
@@ -124,6 +118,7 @@ export const CustomersTable: React.FC<CustomersTableProps> = ({
       ]}
       items={customers}
       trackBy="id"
+      loading={isLoading}
       loadingText="Loading customers"
       stickyColumns={{ first: preferences.stickyColumns?.first, last: 1 }}
       wrapLines={preferences.wrapLines}
