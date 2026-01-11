@@ -1,7 +1,7 @@
 import { EmptyState } from "@/components/empty-state";
 import { useGetCustomers } from "@/features/customer-search/api/use-get-customers";
 import { CustomersTable } from "@/features/customer-search/components/customers-table";
-import { CustomersTableFilter } from "@/features/customer-search/components/customers-table-filter";
+import { CustomerSearchForm } from "@/features/customer-search/components/customer-search-form";
 import { CustomersTableHeader } from "@/features/customer-search/components/customers-table-header";
 import { CustomerSearchParamsSchema } from "@/features/customer-search/schemas/customer-search-params.schema";
 import { Box } from "@cloudscape-design/components";
@@ -21,7 +21,7 @@ function RouteComponent() {
     <Box padding={{ horizontal: "l", vertical: "s" }}>
       <CustomersTable
         header={<CustomersTableHeader count={customersData?.total} />}
-        filter={<CustomersTableFilter />}
+        filter={<CustomerSearchForm isLoading={isLoading} />}
         empty={<EmptyState heading="No customers" />}
         customers={customersData?.data ?? []}
         totalItemsCount={customersData?.total}

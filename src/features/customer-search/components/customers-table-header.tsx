@@ -18,7 +18,7 @@ export const CustomersTableHeader: React.FC<CustomersTableHeaderProps> = ({
   return (
     <Header
       variant="awsui-h1-sticky"
-      counter={count && `(${count})`}
+      counter={count != null && `(${count})`}
       description={
         <span>
           Find customers choosing between <b>contractor</b>, <b>quote</b> or{" "}
