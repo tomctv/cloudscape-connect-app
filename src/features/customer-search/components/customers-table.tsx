@@ -131,7 +131,11 @@ export const CustomersTable: React.FC<CustomersTableProps> = ({
             setPreferences(newPreferences);
             if (newPreferences.pageSize !== routeSearch.limit) {
               navigate({
-                search: { limit: newPreferences.pageSize, offset: 0 },
+                search: (prev) => ({
+                  mode: prev.mode,
+                  limit: newPreferences.pageSize,
+                  offset: 0,
+                }),
               });
             }
           }}
