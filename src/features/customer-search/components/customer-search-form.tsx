@@ -13,7 +13,7 @@ import {
 } from "../schemas/customer-search-form.schema";
 import { getRouteApi, useNavigate } from "@tanstack/react-router";
 import { PhoneNumberInput } from "@/components/phone-number-input";
-import { createZodFieldValidator } from "@/utils/validation/zod-field-validator";
+import { createZodFieldValidator } from "@/lib/validation";
 
 const routeApi = getRouteApi("/customers/search");
 
@@ -152,7 +152,9 @@ export const CustomerSearchForm: React.FC<CustomerSearchFormProps> = ({
                   inputMode="text"
                   value={field.state.value || ""}
                   onBlur={field.handleBlur}
-                  onChange={(e) => field.handleChange(e.detail.value)}
+                  onChange={(e) =>
+                    field.handleChange(e.detail.value.toUpperCase())
+                  }
                   placeholder="Type a tax code"
                   disabled={isLoading}
                 />
