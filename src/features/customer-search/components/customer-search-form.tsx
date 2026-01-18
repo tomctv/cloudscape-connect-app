@@ -13,6 +13,7 @@ import {
 } from "../schemas/customer-search-form.schema";
 import { getRouteApi, useNavigate } from "@tanstack/react-router";
 import { PhoneNumberInput } from "@/components/phone-number-input";
+import { createZodFieldValidator } from "@/utils/validation/zod-field-validator";
 
 const routeApi = getRouteApi("/customers/search");
 
@@ -71,6 +72,12 @@ export const CustomerSearchForm: React.FC<CustomerSearchFormProps> = ({
       <SpaceBetween direction="horizontal" size="xs" alignItems="start">
         <form.Field
           name="firstName"
+          validators={{
+            onBlur: createZodFieldValidator(
+              CustomerSearchContractorParamsSchema,
+              "firstName",
+            ),
+          }}
           children={(field) => (
             <>
               <FormField
@@ -94,6 +101,12 @@ export const CustomerSearchForm: React.FC<CustomerSearchFormProps> = ({
 
         <form.Field
           name="lastName"
+          validators={{
+            onBlur: createZodFieldValidator(
+              CustomerSearchContractorParamsSchema,
+              "lastName",
+            ),
+          }}
           children={(field) => (
             <>
               <FormField
@@ -117,6 +130,12 @@ export const CustomerSearchForm: React.FC<CustomerSearchFormProps> = ({
 
         <form.Field
           name="taxCode"
+          validators={{
+            onBlur: createZodFieldValidator(
+              CustomerSearchContractorParamsSchema,
+              "taxCode",
+            ),
+          }}
           children={(field) => (
             <>
               <FormField
@@ -140,6 +159,12 @@ export const CustomerSearchForm: React.FC<CustomerSearchFormProps> = ({
 
         <form.Field
           name="birthDate"
+          validators={{
+            onBlur: createZodFieldValidator(
+              CustomerSearchContractorParamsSchema,
+              "birthDate",
+            ),
+          }}
           children={(field) => (
             <>
               <FormField
@@ -165,15 +190,10 @@ export const CustomerSearchForm: React.FC<CustomerSearchFormProps> = ({
         <form.Field
           name="phoneNumber"
           validators={{
-            onBlur: ({ value }) => {
-              const result = CustomerSearchContractorParamsSchema.pick({
-                phoneNumber: true,
-              }).safeParse({ phoneNumber: value });
-
-              if (!result.success) return result.error.issues;
-
-              return undefined;
-            },
+            onBlur: createZodFieldValidator(
+              CustomerSearchContractorParamsSchema,
+              "phoneNumber",
+            ),
           }}
           children={(field) => (
             <>
@@ -197,6 +217,12 @@ export const CustomerSearchForm: React.FC<CustomerSearchFormProps> = ({
 
         <form.Field
           name="email"
+          validators={{
+            onBlur: createZodFieldValidator(
+              CustomerSearchContractorParamsSchema,
+              "email",
+            ),
+          }}
           children={(field) => (
             <>
               <FormField
