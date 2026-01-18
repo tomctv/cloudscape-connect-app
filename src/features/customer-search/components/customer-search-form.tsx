@@ -12,6 +12,7 @@ import {
   type CustomerSearchContractorParams,
 } from "../schemas/customer-search-form.schema";
 import { getRouteApi, useNavigate } from "@tanstack/react-router";
+import { PhoneNumberInput } from "@/components/phone-number-input";
 
 const routeApi = getRouteApi("/customers/search");
 
@@ -35,19 +36,24 @@ export const CustomerSearchForm: React.FC<CustomerSearchFormProps> = ({
       email: routeSearch.email,
     } as CustomerSearchContractorParams,
     validators: {
-      onBlur: CustomerSearchContractorParamsSchema,
+      onSubmit: CustomerSearchContractorParamsSchema,
     },
     validationLogic: revalidateLogic({
       mode: "submit",
       modeAfterSubmission: "change",
     }),
     onSubmit: async ({ value }) => {
+      const result = CustomerSearchContractorParamsSchema.parse(value);
+      console.log({ value });
+      console.log({
+        parsed: result,
+      });
       navigate({
         search: (prev) => ({
           mode: prev.mode, // keep previous mode
           limit: prev.limit, // keep limit
           offset: 0, // reset offset
-          ...value, // new filters
+          ...result, // new filters
         }),
         replace: true,
       });
@@ -158,6 +164,17 @@ export const CustomerSearchForm: React.FC<CustomerSearchFormProps> = ({
 
         <form.Field
           name="phoneNumber"
+          validators={{
+            onBlur: ({ value }) => {
+              const result = CustomerSearchContractorParamsSchema.pick({
+                phoneNumber: true,
+              }).safeParse({ phoneNumber: value });
+
+              if (!result.success) return result.error.issues;
+
+              return undefined;
+            },
+          }}
           children={(field) => (
             <>
               <FormField
@@ -166,12 +183,11 @@ export const CustomerSearchForm: React.FC<CustomerSearchFormProps> = ({
                   .map((error) => error?.message)
                   .join(", ")}
               >
-                <Input
-                  inputMode="tel"
-                  value={field.state.value || ""}
+                <PhoneNumberInput
+                  placeholder="Enter phone number"
+                  value={field.state.value}
+                  onChange={(value) => field.handleChange(value)}
                   onBlur={field.handleBlur}
-                  onChange={(e) => field.handleChange(e.detail.value)}
-                  placeholder="Type a phone number"
                   disabled={isLoading}
                 />
               </FormField>
@@ -209,7 +225,8 @@ export const CustomerSearchForm: React.FC<CustomerSearchFormProps> = ({
               state.isSubmitting,
               state.isPristine,
               Object.values(state.values).some(
-                (value) => value !== undefined && value !== null && value !== ""
+                (value) =>
+                  value !== undefined && value !== null && value !== "",
               ),
             ]}
             children={([canSubmit, isSubmitting, isPristine, hasFilters]) => (

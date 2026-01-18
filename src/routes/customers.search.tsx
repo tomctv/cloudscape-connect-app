@@ -22,7 +22,16 @@ function RouteComponent() {
       <CustomersTable
         header={<CustomersTableHeader count={customersData?.total} />}
         filter={<CustomerSearchForm isLoading={isLoading} />}
-        empty={<EmptyState heading="No customers" />}
+        empty={
+          <EmptyState
+            heading="No customers"
+            description={
+              customersData?.data.length === 0
+                ? "No customers matching the filter criteria"
+                : "Apply some filters to find customers"
+            }
+          />
+        }
         customers={customersData?.data ?? []}
         totalItemsCount={customersData?.total}
         isLoading={isLoading}
