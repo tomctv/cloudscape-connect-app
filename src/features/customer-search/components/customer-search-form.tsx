@@ -45,10 +45,7 @@ export const CustomerSearchForm: React.FC<CustomerSearchFormProps> = ({
     }),
     onSubmit: async ({ value }) => {
       const result = CustomerSearchContractorParamsSchema.parse(value);
-      console.log({ value });
-      console.log({
-        parsed: result,
-      });
+
       navigate({
         search: (prev) => ({
           mode: prev.mode, // keep previous mode
@@ -58,6 +55,13 @@ export const CustomerSearchForm: React.FC<CustomerSearchFormProps> = ({
         }),
         replace: true,
       });
+    },
+    onSubmitInvalid() {
+      const InvalidInput = document.querySelector(
+        '[aria-invalid="true"]',
+      ) as HTMLInputElement;
+
+      InvalidInput?.focus();
     },
   });
 

@@ -33,7 +33,7 @@ function RouteComponent() {
           />
         }
         customers={customersData?.data ?? []}
-        totalItemsCount={customersData?.total}
+        totalItemsCount={(customersData?.data ?? []).length}
         isLoading={isLoading}
       />
     </Box>
