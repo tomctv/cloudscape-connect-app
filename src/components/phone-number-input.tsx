@@ -3,6 +3,7 @@ import {
   colorBackgroundInputDefault,
   colorBorderInputDefault,
   colorBorderInputFocused,
+  colorTextInputPlaceholder,
   lineHeightBodyM,
   spaceStaticS,
   spaceStaticXxs,
@@ -31,6 +32,11 @@ const StyledPhoneInput = styled(PhoneInput)<PhoneInputProps>`
 
     &:focus {
       outline: none;
+    }
+
+    &::placeholder {
+      font-style: italic;
+      color: ${colorTextInputPlaceholder};
     }
   }
 `;
