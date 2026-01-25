@@ -7,7 +7,7 @@ export const CustomerSearchContractorParamsSchema = z.object({
   taxCode: taxCodeOptionalSchema,
   birthDate: z.string().trim().optional(),
   phoneNumber: phoneNumberSchema.optional(),
-  email: z.email("Must be a valid email address").optional(),
+  email: z.email("Must be a valid email address").or(z.literal("")).optional(),
 });
 
 export type CustomerSearchContractorParams = z.infer<
