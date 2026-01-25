@@ -5,7 +5,7 @@ import {
   type CustomerSearchContractorParams,
 } from "../../schemas/customer-search-form.schema";
 import { revalidateLogic } from "@tanstack/react-form";
-import { Box, SpaceBetween } from "@cloudscape-design/components";
+import { Box, Grid, SpaceBetween } from "@cloudscape-design/components";
 import { createZodFieldValidator } from "@/lib/validation";
 
 const routeApi = getRouteApi("/customers/search");
@@ -66,88 +66,130 @@ export const ContractorSearchForm: React.FC<ContractorSearchFormProps> = ({
         form.handleSubmit();
       }}
     >
-      <SpaceBetween direction="horizontal" size="xs" alignItems="start">
-        <form.AppField
-          name="firstName"
-          validators={{
-            onBlur: createZodFieldValidator(
-              CustomerSearchContractorParamsSchema,
-              "firstName",
-            ),
-          }}
-          children={(field) => (
-            <field.TextField
-              label={"First name"}
-              placeholder={"Enter first name"}
-              disabled={isLoading}
-            />
-          )}
-        />
+      <Grid
+        gridDefinition={[
+          {
+            colspan: {
+              default: 12,
+              xxs: 12,
+              xs: 9,
+              s: 9,
+              m: 10,
+              l: 10,
+              xl: 10,
+            },
+          },
+          {
+            colspan: { default: 12, xxs: 12, xs: 3, s: 3, m: 2, l: 2, xl: 2 },
+          },
+        ]}
+      >
+        <Grid
+          gridDefinition={[
+            {
+              colspan: { default: 6, xxs: 4, xs: 4, s: 3, m: 2, l: 2, xl: 2 },
+            },
+            {
+              colspan: { default: 6, xxs: 4, xs: 4, s: 3, m: 2, l: 2, xl: 2 },
+            },
+            {
+              colspan: { default: 6, xxs: 4, xs: 4, s: 3, m: 2, l: 2, xl: 2 },
+            },
+            {
+              colspan: { default: 6, xxs: 4, xs: 4, s: 3, m: 2, l: 2, xl: 2 },
+            },
+            {
+              colspan: { default: 6, xxs: 4, xs: 4, s: 3, m: 2, l: 2, xl: 2 },
+            },
+            {
+              colspan: { default: 6, xxs: 4, xs: 4, s: 3, m: 2, l: 2, xl: 2 },
+            },
+          ]}
+        >
+          <form.AppField
+            name="firstName"
+            validators={{
+              onBlur: createZodFieldValidator(
+                CustomerSearchContractorParamsSchema,
+                "firstName",
+              ),
+            }}
+            children={(field) => (
+              <field.TextField
+                label={"First name"}
+                placeholder={"Enter first name"}
+                disabled={isLoading}
+              />
+            )}
+          />
 
-        <form.AppField
-          name="lastName"
-          validators={{
-            onBlur: createZodFieldValidator(
-              CustomerSearchContractorParamsSchema,
-              "lastName",
-            ),
-          }}
-          children={(field) => (
-            <field.TextField
-              label={"Last name"}
-              placeholder={"Enter last name"}
-              disabled={isLoading}
-            />
-          )}
-        />
+          <form.AppField
+            name="lastName"
+            validators={{
+              onBlur: createZodFieldValidator(
+                CustomerSearchContractorParamsSchema,
+                "lastName",
+              ),
+            }}
+            children={(field) => (
+              <field.TextField
+                label={"Last name"}
+                placeholder={"Enter last name"}
+                disabled={isLoading}
+              />
+            )}
+          />
 
-        <form.AppField
-          name="taxCode"
-          validators={{
-            onBlur: createZodFieldValidator(
-              CustomerSearchContractorParamsSchema,
-              "taxCode",
-            ),
-          }}
-          children={(field) => <field.TaxCodeField disabled={isLoading} />}
-        />
+          <form.AppField
+            name="taxCode"
+            validators={{
+              onBlur: createZodFieldValidator(
+                CustomerSearchContractorParamsSchema,
+                "taxCode",
+              ),
+            }}
+            children={(field) => <field.TaxCodeField disabled={isLoading} />}
+          />
 
-        <form.AppField
-          name="birthDate"
-          validators={{
-            onBlur: createZodFieldValidator(
-              CustomerSearchContractorParamsSchema,
-              "birthDate",
-            ),
-          }}
-          children={(field) => (
-            <field.DateField label="Birth date" disabled={isLoading} />
-          )}
-        />
+          <form.AppField
+            name="birthDate"
+            validators={{
+              onBlur: createZodFieldValidator(
+                CustomerSearchContractorParamsSchema,
+                "birthDate",
+              ),
+            }}
+            children={(field) => (
+              <field.DateField label="Birth date" disabled={isLoading} />
+            )}
+          />
 
-        <form.AppField
-          name="phoneNumber"
-          validators={{
-            onBlur: createZodFieldValidator(
-              CustomerSearchContractorParamsSchema,
-              "phoneNumber",
-            ),
-          }}
-          children={(field) => <field.PhoneNumberField disabled={isLoading} />}
-        />
+          <form.AppField
+            name="phoneNumber"
+            validators={{
+              onBlur: createZodFieldValidator(
+                CustomerSearchContractorParamsSchema,
+                "phoneNumber",
+              ),
+            }}
+            children={(field) => (
+              <field.PhoneNumberField disabled={isLoading} />
+            )}
+          />
 
-        <form.AppField
-          name="email"
-          validators={{
-            onBlur: createZodFieldValidator(
-              CustomerSearchContractorParamsSchema,
-              "email",
-            ),
-          }}
-          children={(field) => <field.EmailField disabled={isLoading} />}
-        />
+          <form.AppField
+            name="email"
+            validators={{
+              onBlur: createZodFieldValidator(
+                CustomerSearchContractorParamsSchema,
+                "email",
+              ),
+            }}
+            children={(field) => <field.EmailField disabled={isLoading} />}
+          />
+        </Grid>
 
-        <Box margin={{ top: "xl" }}>
+        <Box margin={{ top: "xl" }} float="right">
           <SpaceBetween direction="horizontal" size="xs">
             <form.AppForm>
               <SpaceBetween direction="horizontal" size="xs">
@@ -170,7 +212,7 @@ export const ContractorSearchForm: React.FC<ContractorSearchFormProps> = ({
             </form.AppForm>
           </SpaceBetween>
         </Box>
-      </SpaceBetween>
+      </Grid>
     </form>
   );
 };
