@@ -22,6 +22,39 @@ export const CustomerSearchParamsSchema = z.object({
   licensePlateNumber: licensePlateSchema.optional().catch(undefined),
   subjectCode: z.string().trim().optional().catch(undefined),
   policyNumber: z.string().trim().optional().catch(undefined),
+  compactHeader: z
+    .preprocess((val) => {
+      if (val === "true" || val === true || val === "") return true;
+      else return undefined;
+    }, z.boolean().optional())
+    .optional(),
 });
 
 export type CustomerSearchParams = z.infer<typeof CustomerSearchParamsSchema>;
+
+export const CustomerSearchApiParamsSchema = CustomerSearchParamsSchema.omit({
+  compactHeader: true,
+});
+
+export type CustomerSearchApiParams = z.infer<
+  typeof CustomerSearchApiParamsSchema
+>;
+
+export type CustomerSearchFormParams = Omit<
+  CustomerSearchParams,
+  "mode" | "limit" | "offset" | "compactHeader"
+>;
+
+export const customerSearchFormParamsKeys: readonly (keyof CustomerSearchFormParams)[] =
+  [
+    "firstName",
+    "lastName",
+    "taxCode",
+    "birthDate",
+    "phoneNumber",
+    "email",
+    "quoteNumber",
+    "licensePlateNumber",
+    "subjectCode",
+    "policyNumber",
+  ];
