@@ -23,8 +23,8 @@ export const QuoteSearchForm: React.FC<QuoteSearchFormProps> = ({
   const form = useAppForm({
     defaultValues: {
       quoteNumber: routeSearch.quoteNumber || "",
-      taxCode: routeSearch.taxCode,
-      licensePlateNumber: routeSearch.licensePlateNumber,
+      taxCode: routeSearch.taxCode || "",
+      licensePlateNumber: routeSearch.licensePlateNumber || "",
     } as CustomerSearchQuoteParams,
     validators: {
       onSubmit: CustomerSearchQuoteParamsSchema,
