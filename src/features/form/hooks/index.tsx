@@ -9,6 +9,9 @@ const DateField = lazy(() => import("../components/date-field.tsx"));
 const PhoneNumberField = lazy(
   () => import("../components/phone-number-field.tsx"),
 );
+const LicensePlateNumberField = lazy(
+  () => import("../components/license-plate-number-field.tsx"),
+);
 
 const SearchButton = lazy(() => import("../components/search-button.tsx"));
 const ClearFormButton = lazy(
@@ -22,6 +25,7 @@ export const { useAppForm, withForm, withFieldGroup } = createFormHook({
     TaxCodeField,
     DateField,
     TextField,
+    LicensePlateNumberField,
   },
   formComponents: {
     SearchButton,
