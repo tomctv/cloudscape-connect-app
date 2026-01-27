@@ -35,6 +35,7 @@ export const CustomersTable: React.FC<CustomersTableProps> = ({
       "customer-search-table-preferences",
       {
         pageSize: routeSearch.limit,
+        stickyColumns: { first: 2 },
         contentDisplay: [
           { id: "firstName", visible: true },
           { id: "lastName", visible: true },
@@ -45,7 +46,7 @@ export const CustomersTable: React.FC<CustomersTableProps> = ({
           { id: "residenceProvince", visible: true },
           { id: "primaryPhone", visible: true },
         ],
-      }
+      },
     );
 
   return (
