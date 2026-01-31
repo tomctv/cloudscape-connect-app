@@ -1,4 +1,5 @@
 import {
+  Box,
   TokenGroup,
   type TokenGroupProps,
 } from "@cloudscape-design/components";
@@ -113,11 +114,23 @@ const FormTokenGroup: React.FC = () => {
   };
 
   return (
-    <StyledTokenGroup
-      disableOuterPadding
-      onDismiss={({ detail: { itemIndex } }) => handleDismiss(itemIndex)}
-      items={items}
-    />
+    <div>
+      {items.length ? (
+        <StyledTokenGroup
+          disableOuterPadding
+          onDismiss={({ detail: { itemIndex } }) => handleDismiss(itemIndex)}
+          items={items}
+        />
+      ) : (
+        <Box
+          margin={{ bottom: "xxs" }}
+          padding={{ bottom: "xxxs" }}
+          color="text-status-inactive"
+        >
+          <i>No filters applied</i>
+        </Box>
+      )}
+    </div>
   );
 };
 
