@@ -9,7 +9,7 @@ function shouldTrigger(params: Parameters<typeof queries.search>[0]): boolean {
     case "quote":
       return params.quoteNumber !== undefined;
     case "policy":
-      return false;
+      return params.policyNumber !== undefined;
     default:
       return false;
   }

@@ -34,7 +34,6 @@ export const QuoteSearchForm: React.FC<QuoteSearchFormProps> = ({
       modeAfterSubmission: "change",
     }),
     onSubmit: async ({ value }) => {
-      console.log({ value });
       const result = CustomerSearchQuoteParamsSchema.parse(value);
 
       navigate({

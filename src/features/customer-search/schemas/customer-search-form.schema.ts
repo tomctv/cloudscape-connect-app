@@ -27,3 +27,13 @@ export const CustomerSearchQuoteParamsSchema = z.object({
 export type CustomerSearchQuoteParams = z.infer<
   typeof CustomerSearchQuoteParamsSchema
 >;
+
+export const CustomerSearchPolicyParamsSchema = z.object({
+  policyNumber: z.string().trim().min(1, "This field is required"),
+  subjectCode: z.string().optional(),
+  licensePlateNumber: licensePlateOptionalSchema,
+});
+
+export type CustomerSearchPolicyParams = z.infer<
+  typeof CustomerSearchPolicyParamsSchema
+>;
