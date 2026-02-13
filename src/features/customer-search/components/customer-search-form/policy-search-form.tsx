@@ -4,9 +4,10 @@ import {
   type CustomerSearchPolicyParams,
 } from "../../schemas/customer-search-form.schema";
 import { useAppForm } from "@/features/form/hooks";
-import { revalidateLogic } from "@tanstack/react-form";
 import { Box, Grid, SpaceBetween } from "@cloudscape-design/components";
 import { createZodFieldValidator } from "@/lib/validation";
+import { customerSearchFormOpts } from "./form-options";
+import { formGridDefinition, getFieldGridDefinition } from "./grid-options";
 
 interface PolicySearchFormProps {
   isLoading?: boolean;
@@ -21,6 +22,7 @@ export const PolicySearchForm: React.FC<PolicySearchFormProps> = ({
   const navigate = useNavigate({ from: "/customers/search" });
 
   const form = useAppForm({
+    ...customerSearchFormOpts,
     defaultValues: {
       policyNumber: routeSearch.policyNumber || "",
       subjectCode: routeSearch.subjectCode || "",
@@ -29,10 +31,6 @@ export const PolicySearchForm: React.FC<PolicySearchFormProps> = ({
     validators: {
       onSubmit: CustomerSearchPolicyParamsSchema,
     },
-    validationLogic: revalidateLogic({
-      mode: "submit",
-      modeAfterSubmission: "change",
-    }),
     onSubmit: async ({ value }) => {
       const result = CustomerSearchPolicyParamsSchema.parse(value);
 
@@ -46,13 +44,6 @@ export const PolicySearchForm: React.FC<PolicySearchFormProps> = ({
         replace: true,
       });
     },
-    onSubmitInvalid() {
-      const InvalidInput = document.querySelector(
-        '[aria-invalid="true"]',
-      ) as HTMLInputElement;
-
-      InvalidInput?.focus();
-    },
   });
 
   return (
@@ -63,37 +54,8 @@ export const PolicySearchForm: React.FC<PolicySearchFormProps> = ({
         form.handleSubmit();
       }}
     >
-      <Grid
-        gridDefinition={[
-          {
-            colspan: {
-              default: 12,
-              xxs: 12,
-              xs: 9,
-              s: 9,
-              m: 10,
-              l: 10,
-              xl: 10,
-            },
-          },
-          {
-            colspan: { default: 12, xxs: 12, xs: 3, s: 3, m: 2, l: 2, xl: 2 },
-          },
-        ]}
-      >
-        <Grid
-          gridDefinition={[
-            {
-              colspan: { default: 6, xxs: 4, xs: 4, s: 3, m: 2, l: 2, xl: 2 },
-            },
-            {
-              colspan: { default: 6, xxs: 4, xs: 4, s: 3, m: 2, l: 2, xl: 2 },
-            },
-            {
-              colspan: { default: 6, xxs: 4, xs: 4, s: 3, m: 2, l: 2, xl: 2 },
-            },
-          ]}
-        >
+      <Grid gridDefinition={formGridDefinition}>
+        <Grid gridDefinition={getFieldGridDefinition(3)}>
           <form.AppField
             name="policyNumber"
             validators={{

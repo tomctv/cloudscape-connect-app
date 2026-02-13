@@ -4,9 +4,10 @@ import {
   CustomerSearchContractorParamsSchema,
   type CustomerSearchContractorParams,
 } from "../../schemas/customer-search-form.schema";
-import { revalidateLogic } from "@tanstack/react-form";
 import { Box, Grid, SpaceBetween } from "@cloudscape-design/components";
 import { createZodFieldValidator } from "@/lib/validation";
+import { customerSearchFormOpts } from "./form-options";
+import { formGridDefinition, getFieldGridDefinition } from "./grid-options";
 
 const routeApi = getRouteApi("/customers/search");
 
@@ -21,6 +22,7 @@ export const ContractorSearchForm: React.FC<ContractorSearchFormProps> = ({
   const navigate = useNavigate({ from: "/customers/search" });
 
   const form = useAppForm({
+    ...customerSearchFormOpts,
     defaultValues: {
       firstName: routeSearch.firstName,
       lastName: routeSearch.lastName || "",
@@ -32,10 +34,6 @@ export const ContractorSearchForm: React.FC<ContractorSearchFormProps> = ({
     validators: {
       onSubmit: CustomerSearchContractorParamsSchema,
     },
-    validationLogic: revalidateLogic({
-      mode: "submit",
-      modeAfterSubmission: "change",
-    }),
     onSubmit: async ({ value }) => {
       const result = CustomerSearchContractorParamsSchema.parse(value);
 
@@ -49,13 +47,6 @@ export const ContractorSearchForm: React.FC<ContractorSearchFormProps> = ({
         replace: true,
       });
     },
-    onSubmitInvalid() {
-      const InvalidInput = document.querySelector(
-        '[aria-invalid="true"]',
-      ) as HTMLInputElement;
-
-      InvalidInput?.focus();
-    },
   });
 
   return (
@@ -66,46 +57,8 @@ export const ContractorSearchForm: React.FC<ContractorSearchFormProps> = ({
         form.handleSubmit();
       }}
     >
-      <Grid
-        gridDefinition={[
-          {
-            colspan: {
-              default: 12,
-              xxs: 12,
-              xs: 9,
-              s: 9,
-              m: 10,
-              l: 10,
-              xl: 10,
-            },
-          },
-          {
-            colspan: { default: 12, xxs: 12, xs: 3, s: 3, m: 2, l: 2, xl: 2 },
-          },
-        ]}
-      >
-        <Grid
-          gridDefinition={[
-            {
-              colspan: { default: 6, xxs: 4, xs: 4, s: 3, m: 2, l: 2, xl: 2 },
-            },
-            {
-              colspan: { default: 6, xxs: 4, xs: 4, s: 3, m: 2, l: 2, xl: 2 },
-            },
-            {
-              colspan: { default: 6, xxs: 4, xs: 4, s: 3, m: 2, l: 2, xl: 2 },
-            },
-            {
-              colspan: { default: 6, xxs: 4, xs: 4, s: 3, m: 2, l: 2, xl: 2 },
-            },
-            {
-              colspan: { default: 6, xxs: 4, xs: 4, s: 3, m: 2, l: 2, xl: 2 },
-            },
-            {
-              colspan: { default: 6, xxs: 4, xs: 4, s: 3, m: 2, l: 2, xl: 2 },
-            },
-          ]}
-        >
+      <Grid gridDefinition={formGridDefinition}>
+        <Grid gridDefinition={getFieldGridDefinition(6)}>
           <form.AppField
             name="firstName"
             validators={{
