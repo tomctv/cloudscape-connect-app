@@ -1,5 +1,6 @@
 import { Tabs, type TabsProps } from "@cloudscape-design/components";
 import {
+  colorBackgroundLayoutMain,
   fontSizeBodyM,
   spaceStaticXxxs,
 } from "@cloudscape-design/design-tokens";
@@ -19,6 +20,7 @@ type CustomTab = TabsProps.Tab & {
 const TabsContainer = styled.div`
   display: flex;
   align-items: center;
+  background-color: ${colorBackgroundLayoutMain};
 `;
 
 /**
