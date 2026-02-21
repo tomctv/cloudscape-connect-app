@@ -1,4 +1,4 @@
-import { Pagination, Table } from "@cloudscape-design/components";
+import { Table } from "@cloudscape-design/components";
 import type { CustomerSearchResult } from "../schemas/customer-result.schema";
 import { CustomerStatusIndicator } from "@/components/customer-status-indicator";
 import { CustomerDetailsLink } from "./customer-details-link";
@@ -10,6 +10,7 @@ import { useLayoutContext } from "@/features/layout/hooks/use-layout-context";
 interface CustomersTableProps {
   header: React.ReactNode;
   filter: React.ReactNode;
+  pagination: React.ReactNode;
   empty: React.ReactNode;
   customers: CustomerSearchResult[];
   isLoading: boolean;
@@ -21,6 +22,7 @@ const routeApi = getRouteApi("/customers/search");
 export const CustomersTable: React.FC<CustomersTableProps> = ({
   header,
   filter,
+  pagination,
   empty,
   customers,
   isLoading,
@@ -56,7 +58,7 @@ export const CustomersTable: React.FC<CustomersTableProps> = ({
       stickyHeaderVerticalOffset={headerHeight + 12}
       header={header}
       filter={filter}
-      pagination={<Pagination currentPageIndex={1} pagesCount={2} />}
+      pagination={pagination}
       enableKeyboardNavigation
       totalItemsCount={totalItemsCount}
       renderAriaLive={({ firstIndex, lastIndex, totalItemsCount }) =>
@@ -133,7 +135,7 @@ export const CustomersTable: React.FC<CustomersTableProps> = ({
             if (newPreferences.pageSize !== routeSearch.limit) {
               navigate({
                 search: (prev) => ({
-                  mode: prev.mode,
+                  ...prev,
                   limit: newPreferences.pageSize,
                   offset: 0,
                 }),

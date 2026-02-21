@@ -45,9 +45,11 @@ export const CustomersTableHeader: React.FC<CustomersTableHeaderProps> = ({
             selectedId={routeSearch.mode}
             onChange={({ detail }) =>
               navigate({
-                search: {
+                search: (prev) => ({
                   mode: detail.selectedId as CustomerSearchParams["mode"],
-                },
+                  limit: prev.limit,
+                  offset: 0,
+                }),
               })
             }
             // label="Search by"
