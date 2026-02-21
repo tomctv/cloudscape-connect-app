@@ -36,7 +36,7 @@ const BasicLinkComponent = React.forwardRef<
 const CreatedLinkComponent = createLink(BasicLinkComponent);
 
 const CustomLink: LinkComponent<typeof BasicLinkComponent> = (props) => {
-  return <CreatedLinkComponent preload={"viewport"} {...props} />;
+  return <CreatedLinkComponent preload={"intent"} {...props} />;
 };
 
 interface CustomerDetailsLinkProps {
