@@ -12,7 +12,6 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as CustomersSearchRouteImport } from './routes/customers/search'
-import { Route as CustomersNotFoundRouteImport } from './routes/customers/not-found'
 import { Route as CustomersCustomerIdRouteImport } from './routes/customers/$customerId'
 
 const AboutRoute = AboutRouteImport.update({
@@ -30,11 +29,6 @@ const CustomersSearchRoute = CustomersSearchRouteImport.update({
   path: '/customers/search',
   getParentRoute: () => rootRouteImport,
 } as any)
-const CustomersNotFoundRoute = CustomersNotFoundRouteImport.update({
-  id: '/customers/not-found',
-  path: '/customers/not-found',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const CustomersCustomerIdRoute = CustomersCustomerIdRouteImport.update({
   id: '/customers/$customerId',
   path: '/customers/$customerId',
@@ -45,14 +39,12 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/customers/$customerId': typeof CustomersCustomerIdRoute
-  '/customers/not-found': typeof CustomersNotFoundRoute
   '/customers/search': typeof CustomersSearchRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/customers/$customerId': typeof CustomersCustomerIdRoute
-  '/customers/not-found': typeof CustomersNotFoundRoute
   '/customers/search': typeof CustomersSearchRoute
 }
 export interface FileRoutesById {
@@ -60,30 +52,18 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/customers/$customerId': typeof CustomersCustomerIdRoute
-  '/customers/not-found': typeof CustomersNotFoundRoute
   '/customers/search': typeof CustomersSearchRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths:
-    | '/'
-    | '/about'
-    | '/customers/$customerId'
-    | '/customers/not-found'
-    | '/customers/search'
+  fullPaths: '/' | '/about' | '/customers/$customerId' | '/customers/search'
   fileRoutesByTo: FileRoutesByTo
-  to:
-    | '/'
-    | '/about'
-    | '/customers/$customerId'
-    | '/customers/not-found'
-    | '/customers/search'
+  to: '/' | '/about' | '/customers/$customerId' | '/customers/search'
   id:
     | '__root__'
     | '/'
     | '/about'
     | '/customers/$customerId'
-    | '/customers/not-found'
     | '/customers/search'
   fileRoutesById: FileRoutesById
 }
@@ -91,7 +71,6 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AboutRoute: typeof AboutRoute
   CustomersCustomerIdRoute: typeof CustomersCustomerIdRoute
-  CustomersNotFoundRoute: typeof CustomersNotFoundRoute
   CustomersSearchRoute: typeof CustomersSearchRoute
 }
 
@@ -118,13 +97,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CustomersSearchRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/customers/not-found': {
-      id: '/customers/not-found'
-      path: '/customers/not-found'
-      fullPath: '/customers/not-found'
-      preLoaderRoute: typeof CustomersNotFoundRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/customers/$customerId': {
       id: '/customers/$customerId'
       path: '/customers/$customerId'
@@ -139,7 +111,6 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
   CustomersCustomerIdRoute: CustomersCustomerIdRoute,
-  CustomersNotFoundRoute: CustomersNotFoundRoute,
   CustomersSearchRoute: CustomersSearchRoute,
 }
 export const routeTree = rootRouteImport
