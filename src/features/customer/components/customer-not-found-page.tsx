@@ -50,7 +50,7 @@ export const CustomerNotFoundPage: React.FC = () => {
                   href="/customers/search"
                   onFollow={(event) => {
                     event.preventDefault();
-                    navigate({ to: "/customers/search" });
+                    navigate({ to: "/customers/search", replace: true });
                   }}
                 >
                   Search customers
@@ -59,7 +59,7 @@ export const CustomerNotFoundPage: React.FC = () => {
                   href="/"
                   onFollow={(event) => {
                     event.preventDefault();
-                    navigate({ to: "/" });
+                    navigate({ to: "/", replace: true });
                   }}
                 >
                   Go to Home
