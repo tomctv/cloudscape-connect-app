@@ -10,8 +10,7 @@ import styled from "styled-components";
 import { CustomerBreadcrumbs } from "./customer-breadcrumbs";
 import { ButtonGroup } from "@cloudscape-design/components";
 import { useLayoutContext } from "@/features/layout/hooks/use-layout-context";
-import { CalendarPlusIcon } from "@/components/icons/calendar-plus";
-import { NotebookPenIcon } from "@/components/icons/notebook-pen";
+import { CalendarPlusIcon, NotebookPenIcon } from "lucide-react";
 
 interface CustomerNavbarProps {
   notesOpen: boolean;

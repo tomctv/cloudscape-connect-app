@@ -4,9 +4,11 @@ import {
   SpaceBetween,
   type BoxProps,
 } from "@cloudscape-design/components";
-import { UserCheckIcon } from "./icons/user-check";
-import { UserPlusIcon } from "./icons/user-plus";
-import { CircleQuestionMarkIcon } from "./icons/circle-question-mark";
+import {
+  UserCheckIcon,
+  UserPlusIcon,
+  CircleQuestionMarkIcon,
+} from "lucide-react";
 
 interface CustomerStatusIndicatorProps {
   status: "client" | "prospect" | null | undefined;

@@ -1,7 +1,5 @@
 import { TopNavigation } from "@cloudscape-design/components";
-import { LogOutIcon } from "@/components/icons/log-out";
-import { UsersIcon } from "@/components/icons/users";
-import { CalendarsIcon } from "@/components/icons/calendars";
+import { LogOutIcon, CalendarsIcon, UsersIcon } from "lucide-react";
 import { TabNavigation } from "./tab-navigation/tab-navigation";
 import type { BaseNavigationDetail } from "node_modules/@cloudscape-design/components/internal/events";
 import { useNavigate } from "@tanstack/react-router";

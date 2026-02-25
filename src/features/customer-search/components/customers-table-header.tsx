@@ -1,4 +1,4 @@
-import { CalculatorIcon } from "@/components/icons/calculator";
+import { CalculatorIcon } from "lucide-react";
 import {
   ButtonGroup,
   Header,

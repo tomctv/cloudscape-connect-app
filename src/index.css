@@ -1,0 +1,6 @@
+.lucide,
+.lucide>path,
+.lucide>circle,
+.lucide>rect {
+  stroke-width: 3px !important;
+}
