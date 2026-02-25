@@ -6,9 +6,9 @@ import {
   Icon,
   SpaceBetween,
 } from "@cloudscape-design/components";
-import { useNavigate } from "@tanstack/react-router";
+import { useNavigate, type NotFoundRouteProps } from "@tanstack/react-router";
 
-export const CustomerNotFoundPage: React.FC = () => {
+export const CustomerNotFoundPage: React.FC<NotFoundRouteProps> = () => {
   const navigate = useNavigate();
 
   return (
