@@ -1,5 +1,5 @@
 import { ApiError } from "@/api/clients/api-client";
-import { LoadingFallback } from "@/components/loading-fallback";
+import { LoadingState } from "@/components/loading-state";
 import { customerQueryOptions } from "@/features/customer/api/query-options";
 import { CustomerErrorPage } from "@/features/customer/components/customer-error-page";
 import { CustomerNotFoundPage } from "@/features/customer/components/customer-not-found-page";
@@ -36,7 +36,7 @@ export const Route = createFileRoute("/customers/$customerId")({
   },
   component: RouteComponent,
   pendingComponent: () => (
-    <LoadingFallback secondaryContent={"Loading customer data"} />
+    <LoadingState secondaryContent={"Loading customer data"} />
   ),
   notFoundComponent: CustomerNotFoundPage,
   errorComponent: CustomerErrorPage,

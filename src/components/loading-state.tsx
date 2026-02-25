@@ -1,10 +1,10 @@
 import { Box, Spinner } from "@cloudscape-design/components";
 
-interface LoadingFallbackProps {
+interface LoadingStateProps {
   secondaryContent?: React.ReactNode;
 }
 
-export const LoadingFallback: React.FC<LoadingFallbackProps> = ({
+export const LoadingState: React.FC<LoadingStateProps> = ({
   secondaryContent,
 }) => {
   return (
