@@ -13,19 +13,6 @@ export const CustomerSearchResultSchema = z.object({
   gender: z.enum(["F", "M"]).nullable(),
   birthPlace: z.string().nullish(),
   primaryPhone: z.string().nullish(),
-  // secondaryPhone: z.string().nullable(),
-  // contactPreference: z
-  //   .enum(["email", "primaryPhone", "secondaryPhone"])
-  //   .nullable(),
-  // email: z.string().nullable(),
-  // residenceAddress: z.string().nullable(),
-  // occupation: z.string().nullable(),
-  // occupationSector: z.string().nullable(),
-  // livingArrangement: z
-  //   .enum(["alone", "with_family", "with_partner", "with_roommates"])
-  //   .nullable(),
-  // isNonLifeClient: z.boolean().nullable(),
-  // isLifeClient: z.boolean().nullable(),
 });
 
 export type CustomerSearchResult = z.infer<typeof CustomerSearchResultSchema>;

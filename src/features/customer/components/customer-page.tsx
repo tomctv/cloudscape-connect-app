@@ -1,4 +1,8 @@
-import { AppLayoutToolbar, ContentLayout } from "@cloudscape-design/components";
+import {
+  AppLayoutToolbar,
+  ContentLayout,
+  SpaceBetween,
+} from "@cloudscape-design/components";
 import { Outlet } from "@tanstack/react-router";
 import { useState } from "react";
 import { CustomerNavbar } from "./customer-navbar";
@@ -23,8 +27,10 @@ export const CustomerPage: React.FC = () => {
         toolsHide
         content={
           <ContentLayout header={<CustomerHeader />}>
-            <CustomerInformationCard />
-            <Outlet />
+            <SpaceBetween size="l">
+              <CustomerInformationCard />
+              <Outlet />
+            </SpaceBetween>
           </ContentLayout>
         }
         navigationTriggerHide
