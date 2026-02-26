@@ -1,4 +1,5 @@
 import {
+  Box,
   Button,
   Header,
   Pagination,
@@ -166,7 +167,28 @@ export const ContactHistoryTable: React.FC<ContactHistoryTableProps> = ({
         {
           id: "reason",
           header: "Reason",
-          cell: (item) => item.reason || "-",
+          cell: (item) => (
+            <Box>
+              <Box>{item.reason || "-"}</Box>
+              {item.subject && (
+                <Box variant="small">
+                  <strong>Subject: </strong>
+                  <span
+                    style={{
+                      display: "inline-block",
+                      maxWidth: "150px",
+                      overflow: "hidden",
+                      whiteSpace: "nowrap",
+                      textOverflow: "ellipsis",
+                      verticalAlign: "bottom",
+                    }}
+                  >
+                    {item.subject}
+                  </span>
+                </Box>
+              )}
+            </Box>
+          ),
         },
         {
           id: "agent",
