@@ -13,10 +13,6 @@ export const AppNavigation: React.FC = () => {
         identity={{
           href: "/",
           title: "Connect+",
-          logo: {
-            src: "src/assets/app-logo-small.svg",
-            alt: "Connect+",
-          },
         }}
         utilities={[
           {
