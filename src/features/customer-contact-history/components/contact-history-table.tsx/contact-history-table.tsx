@@ -26,6 +26,7 @@ const SEARCHABLE_FIELDS = [
   "channel",
   "macro",
   "reason",
+  "subject",
   "agent",
 ] as const satisfies (keyof CustomerContact)[];
 
@@ -70,9 +71,15 @@ export const ContactHistoryTable: React.FC<ContactHistoryTableProps> = ({
       noMatch: (
         <EmptyState
           title="No matches"
+          subtitle="No contacts match the selected filters"
           action={
-            // eslint-disable-next-line react-hooks/immutability
-            <Button onClick={() => actions.setFiltering("")}>
+            <Button
+              onClick={() => {
+                // eslint-disable-next-line react-hooks/immutability
+                actions.setFiltering("");
+                setSelectedChannel({ value: "ALL" });
+              }}
+            >
               Clear filter
             </Button>
           }
@@ -133,7 +140,7 @@ export const ContactHistoryTable: React.FC<ContactHistoryTableProps> = ({
         },
         {
           id: "startDateTime",
-          header: "Start datetime",
+          header: "Started at",
           cell: (item) =>
             item.startDateTime
               ? format(new Date(item.startDateTime), "yyyy/MM/dd, HH:mm")
@@ -141,7 +148,7 @@ export const ContactHistoryTable: React.FC<ContactHistoryTableProps> = ({
         },
         {
           id: "endDateTime",
-          header: "End datetime",
+          header: "Ended at",
           cell: (item) =>
             item.endDateTime
               ? format(new Date(item.endDateTime), "yyyy/MM/dd, HH:mm")
@@ -235,12 +242,12 @@ export const ContactHistoryTable: React.FC<ContactHistoryTableProps> = ({
               },
               {
                 id: "startDateTime",
-                label: "Start datetime",
+                label: "Started at",
                 alwaysVisible: true,
               },
               {
                 id: "endDateTime",
-                label: "End datetime",
+                label: "Ended at",
               },
               {
                 id: "duration",

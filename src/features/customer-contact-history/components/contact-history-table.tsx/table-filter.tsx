@@ -3,15 +3,14 @@ import {
   type ContactChannelOption,
 } from "@/components/contact-channel-select";
 import {
-  Box,
-  DateRangePicker,
+  Grid,
   TextFilter,
   type DateRangePickerProps,
   type TextFilterProps,
 } from "@cloudscape-design/components";
-import { spaceScaledXs } from "@cloudscape-design/design-tokens";
 import type { Dispatch } from "react";
 import styled from "styled-components";
+import { ContactHistoryDateRangePicker } from "./contact-history-date-range-picker";
 
 interface TableFilterProps {
   disabled?: boolean;
@@ -24,16 +23,11 @@ interface TableFilterProps {
   filteredItemsCount: number | undefined;
 }
 
-const TableFilterContainer = styled.div`
+const FilterContainer = styled.div`
   display: flex;
-  align-items: center;
-  gap: ${spaceScaledXs};
-`;
-
-const TextFilterContainer = styled.div`
-  max-width: 648px;
-  width: 100%;
-  flex-shrink: 1;
+  flex-direction: column;
+  justify-content: end;
+  height: 100%;
 `;
 
 export const TableFilter: React.FC<TableFilterProps> = ({
@@ -47,77 +41,23 @@ export const TableFilter: React.FC<TableFilterProps> = ({
   filteredItemsCount,
 }) => {
   return (
-    <TableFilterContainer>
-      <DateRangePicker
-        onChange={({ detail }) => onDateRangeChange(detail.value)}
-        value={selectedDateRange}
-        relativeOptions={[
-          {
-            key: "previous-3-months",
-            amount: 3,
-            unit: "month",
-            type: "relative",
-          },
-          {
-            key: "previous-6-months",
-            amount: 6,
-            unit: "month",
-            type: "relative",
-          },
-          {
-            key: "previous-1-year",
-            amount: 1,
-            unit: "year",
-            type: "relative",
-          },
-        ]}
-        customRelativeRangeUnits={["day", "month", "year"]}
-        absoluteFormat="slashed"
-        dateInputFormat="slashed"
-        dateOnly
-        disabled={disabled}
-        isDateEnabled={(date) => new Date().getTime() > date.getTime()}
-        dateDisabledReason={() => "You cannot search contacts in the future"}
-        isValidRange={(range) => {
-          if (!range) return { valid: true };
+    <Grid
+      gridDefinition={[
+        { colspan: { default: 6, xxs: 6, xs: 4, s: 3, m: 3, l: 3, xl: 3 } },
+        { colspan: { default: 6, xxs: 6, xs: 4, s: 4, m: 4, l: 5, xl: 5 } },
+        { colspan: { default: 6, xxs: 6, xs: 3, s: 3, m: 3, l: 2, xl: 2 } },
+        { colspan: { default: 6, xxs: 6, xs: 6, s: 2, m: 2, l: 2, xl: 2 } },
+      ]}
+    >
+      <FilterContainer>
+        <ContactHistoryDateRangePicker
+          value={selectedDateRange}
+          onChange={onDateRangeChange}
+          disabled={disabled}
+        />
+      </FilterContainer>
 
-          if (range.type === "absolute") {
-            const [startDateWithoutTime] = range.startDate.split("T");
-            const [endDateWithoutTime] = range.endDate.split("T");
-            if (!startDateWithoutTime || !endDateWithoutTime) {
-              return {
-                valid: false,
-                errorMessage:
-                  "The selected date range is incomplete. Select a start and end date for the date range.",
-              };
-            }
-            if (
-              new Date(range.startDate).getTime() -
-                new Date(range.endDate).getTime() >
-              0
-            ) {
-              return {
-                valid: false,
-                errorMessage:
-                  "The selected date range is invalid. The start date must be before the end date.",
-              };
-            }
-          }
-
-          if (range.type === "relative" && range.amount < 1) {
-            return {
-              valid: false,
-              errorMessage:
-                "The selected date range is invalid. The duration must be a positive integer.",
-            };
-          }
-
-          return { valid: true };
-        }}
-        placeholder="Filter by a date range"
-      />
-
-      <TextFilterContainer>
+      <FilterContainer>
         <TextFilter
           disabled={disabled}
           filteringText={filteringText}
@@ -125,20 +65,26 @@ export const TableFilter: React.FC<TableFilterProps> = ({
           filteringAriaLabel="Filter contacts"
           filteringPlaceholder="Find contacts"
         />
-      </TextFilterContainer>
-      <ContactChannelSelect
-        disabled={disabled}
-        includeAllChannelsOption
-        selectedOption={selectedChannel}
-        onChange={onChannelChange}
-      />
-      {filteredItemsCount !== undefined &&
-        (filteringText || selectedChannel?.value !== "ALL") && (
-          <Box
-            variant="span"
-            padding={{ left: "xxs" }}
-          >{`${filteredItemsCount} match${filteredItemsCount !== 1 ? "es" : ""}`}</Box>
-        )}
-    </TableFilterContainer>
+      </FilterContainer>
+
+      <FilterContainer>
+        <ContactChannelSelect
+          inlineLabelText="Channel"
+          disabled={disabled}
+          includeAllChannelsOption
+          selectedOption={selectedChannel}
+          onChange={onChannelChange}
+        />
+      </FilterContainer>
+
+      <FilterContainer>
+        {filteredItemsCount !== undefined &&
+          (filteringText || selectedChannel?.value !== "ALL") && (
+            <span
+              style={{ paddingBottom: "6px" }}
+            >{`${filteredItemsCount} match${filteredItemsCount !== 1 ? "es" : ""}`}</span>
+          )}
+      </FilterContainer>
+    </Grid>
   );
 };
