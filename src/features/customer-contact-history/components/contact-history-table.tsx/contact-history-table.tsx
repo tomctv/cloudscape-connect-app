@@ -1,7 +1,5 @@
 import {
-  Box,
   Button,
-  Header,
   Pagination,
   Table,
   type DateRangePickerProps,
@@ -15,23 +13,50 @@ import { useCollection } from "@cloudscape-design/collection-hooks";
 import { EmptyState } from "@/components/empty-state";
 import { ContactChannelDisplay } from "@/components/contact-channel-display";
 import { type ContactChannelOption } from "@/components/contact-channel-select";
-import { useState } from "react";
+import { useMemo } from "react";
+
+import { ContactReasonCellDisplay } from "./contact-reason-cell-display";
 import { TableFilter } from "./table-filter";
+import { ErrorState } from "@/components/error-state";
 
 interface ContactHistoryTableProps {
+  header?: React.ReactNode;
+  // error?: React.ReactNode;
+  isLoading?: boolean;
+  isError?: boolean;
   contacts: CustomerContact[] | null | undefined;
+  filteringText: string;
+  onFilteringTextChange: (text: string) => void;
+  selectedChannel: ContactChannelOption | null;
+  onChannelChange: (option: ContactChannelOption) => void;
+  selectedDateRange: DateRangePickerProps.Value | null;
+  onDateRangeChange: (value: DateRangePickerProps.Value | null) => void;
+  onClearFilters: () => void;
+  retryFn?: () => void;
 }
 
 const SEARCHABLE_FIELDS = [
   "channel",
-  "macro",
+  "macroReason",
   "reason",
   "subject",
   "agent",
 ] as const satisfies (keyof CustomerContact)[];
 
 export const ContactHistoryTable: React.FC<ContactHistoryTableProps> = ({
+  header,
+  // error,
+  isError,
+  isLoading,
   contacts,
+  onClearFilters,
+  selectedDateRange,
+  onDateRangeChange,
+  filteringText,
+  onFilteringTextChange,
+  selectedChannel,
+  onChannelChange,
+  retryFn,
 }) => {
   const { headerHeight } = useLayoutContext();
 
@@ -46,64 +71,63 @@ export const ContactHistoryTable: React.FC<ContactHistoryTableProps> = ({
           { id: "startDateTime", visible: true },
           { id: "endDateTime", visible: true },
           { id: "duration", visible: true },
-          { id: "macro", visible: true },
+          { id: "macroReason", visible: true },
           { id: "reason", visible: true },
           { id: "agent", visible: true },
         ],
       },
     );
 
-  const [selectedDateRange, setSelectedDateRange] =
-    useState<DateRangePickerProps.Value | null>(null);
-  const [selectedChannel, setSelectedChannel] =
-    useState<ContactChannelOption | null>({ value: "ALL" });
-
-  const {
-    items,
-    actions,
-    filteredItemsCount,
-    collectionProps,
-    filterProps,
-    paginationProps,
-  } = useCollection(contacts ?? [], {
-    filtering: {
-      empty: <EmptyState title="No contacts" />,
-      noMatch: (
-        <EmptyState
-          title="No matches"
-          subtitle="No contacts match the selected filters"
-          action={
-            <Button
-              onClick={() => {
-                // eslint-disable-next-line react-hooks/immutability
-                actions.setFiltering("");
-                setSelectedChannel({ value: "ALL" });
-              }}
-            >
-              Clear filter
-            </Button>
-          }
-        />
-      ),
-      filteringFunction: (item, filteringText) => {
-        const matchesText = SEARCHABLE_FIELDS.some((field) =>
+  const filteredContacts = useMemo(() => {
+    const items = contacts ?? [];
+    return items.filter((item) => {
+      const matchesText =
+        !filteringText ||
+        SEARCHABLE_FIELDS.some((field) =>
           String(item[field] || "")
             .toLowerCase()
             .includes(filteringText.toLowerCase()),
         );
+      const matchesChannel =
+        !selectedChannel || selectedChannel.value === "ALL"
+          ? true
+          : item.channel === selectedChannel.value;
+      return matchesText && matchesChannel;
+    });
+  }, [contacts, filteringText, selectedChannel]);
 
-        const matchesChannel =
-          selectedChannel?.value === "ALL"
-            ? true
-            : item.channel === selectedChannel?.value;
+  const hasActiveFilter =
+    !!filteringText || (selectedChannel?.value !== "ALL" && !!selectedChannel);
 
-        return matchesText && matchesChannel;
-      },
+  const renderEmptyContent = () => {
+    if (isError)
+      return (
+        <ErrorState
+          title="Failed to fetch contacts"
+          subtitle="The list of customer contacts could not be loaded due to a server error. Try again later."
+          retryFn={retryFn}
+        />
+      );
+    else if ((contacts ?? []).length === 0)
+      return <EmptyState title="No contacts" />;
+    else
+      return (
+        <EmptyState
+          title="No matches"
+          subtitle="No contacts match the selected filters"
+          action={<Button onClick={onClearFilters}>Clear filter</Button>}
+        />
+      );
+  };
+
+  const { items, collectionProps, paginationProps } = useCollection(
+    filteredContacts,
+    {
+      pagination: { pageSize: preferences.pageSize },
+      sorting: {},
+      selection: {},
     },
-    pagination: { pageSize: preferences.pageSize },
-    sorting: {},
-    selection: {},
-  });
+  );
 
   function formatDuration(start: Date, end: Date): string {
     const totalSeconds = Math.floor((end.getTime() - start.getTime()) / 1000);
@@ -121,12 +145,11 @@ export const ContactHistoryTable: React.FC<ContactHistoryTableProps> = ({
       stickyHeader
       stickyHeaderVerticalOffset={headerHeight + 52}
       enableKeyboardNavigation
-      header={
-        <Header counter={contacts && `(${contacts?.length})`}>
-          Contact history
-        </Header>
-      }
+      header={header}
       {...collectionProps}
+      loading={isLoading}
+      loadingText="Loading contacts"
+      empty={renderEmptyContent()}
       items={items}
       trackBy="id"
       columnDefinitions={[
@@ -167,34 +190,18 @@ export const ContactHistoryTable: React.FC<ContactHistoryTableProps> = ({
           },
         },
         {
-          id: "macro",
+          id: "macroReason",
           header: "Macro reason",
-          cell: (item) => item.macro || "-",
+          cell: (item) => item.macroReason || "-",
         },
         {
           id: "reason",
           header: "Reason",
           cell: (item) => (
-            <Box>
-              <Box>{item.reason || "-"}</Box>
-              {item.subject && (
-                <Box variant="small">
-                  <strong>Subject: </strong>
-                  <span
-                    style={{
-                      display: "inline-block",
-                      maxWidth: "150px",
-                      overflow: "hidden",
-                      whiteSpace: "nowrap",
-                      textOverflow: "ellipsis",
-                      verticalAlign: "bottom",
-                    }}
-                  >
-                    {item.subject}
-                  </span>
-                </Box>
-              )}
-            </Box>
+            <ContactReasonCellDisplay
+              reason={item.reason}
+              emailSubject={item.subject}
+            />
           ),
         },
         {
@@ -206,15 +213,16 @@ export const ContactHistoryTable: React.FC<ContactHistoryTableProps> = ({
       filter={
         <TableFilter
           selectedDateRange={selectedDateRange}
-          onDateRangeChange={setSelectedDateRange}
-          filteringText={filterProps.filteringText}
-          onFilterTextChange={filterProps.onChange}
-          selectedChannel={selectedChannel}
-          onChannelChange={(selectedOption) =>
-            setSelectedChannel(selectedOption)
+          onDateRangeChange={onDateRangeChange}
+          filteringText={filteringText}
+          onFilterTextChange={({ detail }) =>
+            onFilteringTextChange(detail.filteringText)
           }
-          disabled={filterProps.disabled}
-          filteredItemsCount={filteredItemsCount}
+          selectedChannel={selectedChannel}
+          onChannelChange={onChannelChange}
+          filteredItemsCount={
+            hasActiveFilter ? filteredContacts?.length : undefined
+          }
         />
       }
       pagination={<Pagination {...paginationProps} />}
@@ -254,8 +262,8 @@ export const ContactHistoryTable: React.FC<ContactHistoryTableProps> = ({
                 label: "Duration",
               },
               {
-                id: "macro",
-                label: "Macro",
+                id: "macroReason",
+                label: "Macro reason",
               },
               {
                 id: "reason",
