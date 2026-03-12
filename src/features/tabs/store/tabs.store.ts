@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import {
   type Tab,
+  type TabIcon,
   type TabType,
   TabsPersistedStateSchema,
 } from "../schemas/tab.schema";
@@ -29,6 +30,9 @@ interface TabsActions {
     resourceId?: string;
     label: string;
     route: string;
+    icon?: TabIcon;
+    isPinned?: boolean;
+    closable?: boolean;
   }) => string;
 
   /** Close a tab by ID. If the closed tab was active, activates an adjacent tab. */
@@ -43,8 +47,13 @@ interface TabsActions {
   /** Set the active tab by ID (or null to deselect all tabs). */
   setActiveTabId: (id: string | null) => void;
 
-  /** Update a tab's mutable properties (label, route). */
-  updateTab: (id: string, updates: Partial<Pick<Tab, "label" | "route">>) => void;
+  /** Update a tab's mutable properties. */
+  updateTab: (
+    id: string,
+    updates: Partial<
+      Pick<Tab, "label" | "route" | "icon" | "status" | "isPinned" | "closable">
+    >,
+  ) => void;
 
   /** Reorder tabs by providing the full ordered array of tab IDs. */
   reorderTabs: (orderedIds: string[]) => void;
@@ -68,7 +77,7 @@ export const useTabsStore = create<TabsState & TabsActions>()(
     (set, get) => ({
       ...initialState,
 
-      openTab: ({ id, type, resourceId, label, route }) => {
+      openTab: ({ id, type, resourceId, label, route, icon, isPinned, closable }) => {
         const { tabs } = get();
         const now = Date.now();
         const existing = tabs.find((tab) => tab.id === id);
@@ -90,6 +99,9 @@ export const useTabsStore = create<TabsState & TabsActions>()(
           resourceId,
           label,
           route,
+          icon,
+          isPinned,
+          closable,
           lastAccessedAt: now,
           createdAt: now,
         };

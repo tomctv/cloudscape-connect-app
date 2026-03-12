@@ -126,6 +126,29 @@ Each entry includes what changed, why, and which files were affected — useful 
 
 **Why:** `z.string().datetime()` is deprecated in Zod v4. Numeric timestamps (`Date.now()`) are faster to compare, lighter in localStorage, require no parsing, and are consistent with how TanStack Router and TanStack Query handle timestamps internally.
 
+### 9. Enriched tab schema with icon, status, isPinned, closable + unified TabContent component
+
+**Files modified:**
+- `src/features/tabs/schemas/tab.schema.ts` — added `TabIconSchema` (`"customer-default"`, `"customer-client"`, `"customer-prospect"`, `"unknown-customer"`), `TabStatusSchema` (`"active-contact"`, `"error"`, `"unsaved-changes"`), and four new optional fields on `TabSchema`: `icon`, `isPinned`, `closable`, `status`
+- `src/features/tabs/store/tabs.store.ts` — expanded `openTab` params to accept `icon`, `isPinned`, `closable`; expanded `updateTab` pick type to include all new fields
+- `src/features/tabs/components/tab-content.tsx` — **new** unified component replacing `customer-tab-link.tsx` + `tab-link-content.tsx`. Takes full `Tab` object as prop, uses `linkOptions` switch on `tab.type` for type-safe routing, maps semantic `TabIcon` to Lucide icons (`UserIcon`, `UserCheckIcon`, `UserPlusIcon`, `CircleQuestionMarkIcon`), overrides icon with Cloudscape `status-warning` on `tab.status === "error"`
+- `src/features/tabs/components/tab-bar.tsx` — simplified to use `<TabContent tab={tab} />` for all tab types; uses `tab.closable !== false` for `dismissible`; removed per-type rendering logic
+- `src/routes/customers/$customerId.tsx` — passes `icon: "customer-default"` in `openTab`; `useEffect` now also updates `icon` based on `customer.status` (client/prospect/default)
+- `src/features/tabs/index.ts` — exports `TabIconSchema`, `TabStatusSchema`, `TabIcon`, `TabStatus`
+
+**Files deleted:**
+- `src/features/tabs/components/customer-tab-link.tsx` — consolidated into `tab-content.tsx`
+- `src/features/tabs/components/tab-link-content.tsx` — consolidated into `tab-content.tsx`
+
+**What changed:**
+- **`icon`** (optional `TabIconSchema`): semantic identifier mapped to Lucide icons in the component layer. Supports `"customer-default"`, `"customer-client"`, `"customer-prospect"`, `"unknown-customer"`. Set to `"customer-default"` on tab creation, updated via `updateTab` when API data provides customer status.
+- **`isPinned`** (optional boolean): pinned tabs stick to the left and can't be dismissed. Defaults to `false` when undefined.
+- **`closable`** (optional boolean): controls whether the dismiss button appears on the tab. Defaults to `true` when undefined.
+- **`status`** (optional `TabStatusSchema`): visual status indicator. `"active-contact"` for customer currently in a call/chat, `"error"` for failed data loads (overrides icon with warning), `"unsaved-changes"` for pending form modifications. Not set on creation — applied later via `updateTab`.
+- **`TabContent` component**: single unified component that receives the full `Tab` object and derives everything (link target via `linkOptions` switch, icon via `TAB_ICON_MAP`, error override). Replaces the previous three-component chain (`tab-bar → customer-tab-link → tab-link-content`).
+
+**Why:** Richer tab metadata enables better UX: visual differentiation by customer status, pinning for frequently used tabs, protecting important tabs from accidental closure, and status indicators for at-a-glance awareness. Consolidating rendering into `TabContent` simplifies the component tree and makes adding new tab types straightforward (one `case` in the switch). All new fields are optional and backward-compatible with existing persisted data (schema version stays at 1).
+
 ---
 
 ## Architecture Decisions Log

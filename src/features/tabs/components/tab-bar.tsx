@@ -9,13 +9,12 @@ import styled from "styled-components";
 import { TabSearch } from "./tab-search";
 import { useSearchFilter } from "@/hooks/use-search-filter";
 import { NoMatchIndicator } from "./no-match-indicator";
-import { CustomerTabLink } from "./customer-tab-link";
 import { useLocation, useNavigate } from "@tanstack/react-router";
 import { useTabsStore } from "../store";
+import { TabContent } from "./tab-content";
 
 type CustomTab = TabsProps.Tab & {
   title: string;
-  pathname: string;
 };
 
 const TabsContainer = styled.div`
@@ -80,21 +79,12 @@ export const TabBar: React.FC = () => {
     () =>
       tabs.map((tab) => ({
         id: tab.id,
-        title: tab.label,
-        pathname: tab.route,
-        dismissible: true,
+        dismissible: tab.closable !== false,
         dismissLabel: `Close ${tab.label}`,
         content: null,
         onDismiss: () => handleDismissTab(tab.id),
-        label:
-          tab.type === "customer" ? (
-            <CustomerTabLink
-              customerId={tab.resourceId ?? tab.id}
-              label={tab.label}
-            />
-          ) : (
-            tab.label
-          ),
+        label: <TabContent tab={tab} />,
+        title: tab.label,
       })),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [tabs],

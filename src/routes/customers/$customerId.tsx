@@ -35,6 +35,7 @@ export const Route = createFileRoute("/customers/$customerId")({
       resourceId: customerId,
       label,
       route,
+      icon: "customer-default",
     });
   },
   loader: async ({
@@ -43,7 +44,7 @@ export const Route = createFileRoute("/customers/$customerId")({
     abortController,
   }) => {
     try {
-      return await queryClient.ensureQueryData({
+      await queryClient.ensureQueryData({
         ...customerQueryOptions(customerId, abortController.signal),
       });
     } catch (error) {
@@ -70,7 +71,16 @@ function RouteComponent() {
     const label = [customer?.firstName, customer?.lastName]
       .filter(Boolean)
       .join(" ");
-    if (label) updateTab(customerId, { label });
+    if (label)
+      updateTab(customerId, {
+        label,
+        icon:
+          customer.status === "client"
+            ? "customer-client"
+            : customer.status === "prospect"
+              ? "customer-prospect"
+              : "customer-default",
+      });
   }, [customerId, customer, updateTab]);
 
   return <CustomerPage />;
