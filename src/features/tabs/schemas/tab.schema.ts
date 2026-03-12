@@ -32,11 +32,11 @@ export const TabSchema = z.object({
   /** The route path this tab navigates to (e.g., "/customers/12345678"). */
   route: z.string(),
 
-  /** ISO timestamp of when the tab was last activated. */
-  lastAccessedAt: z.string().datetime(),
+  /** Epoch timestamp (ms) of when the tab was last activated. */
+  lastAccessedAt: z.number().int().nonnegative(),
 
-  /** ISO timestamp of when the tab was first opened. */
-  createdAt: z.string().datetime(),
+  /** Epoch timestamp (ms) of when the tab was first opened. */
+  createdAt: z.number().int().nonnegative(),
 });
 
 export type Tab = z.infer<typeof TabSchema>;

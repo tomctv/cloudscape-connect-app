@@ -100,6 +100,32 @@ Each entry includes what changed, why, and which files were affected — useful 
 
 **Why:** Separation of concerns. Tab lifecycle belongs to the route, not to the components that trigger navigation. This avoids duplicating tab logic across every link/button that navigates to a customer route. The masked search param pattern allows passing data to `onEnter` without polluting the URL.
 
+### 7. Moved tab components to `features/tabs/components/` + renamed to TabBar
+
+**Files moved:**
+- `src/features/navigation/components/tab-navigation/tab-navigation.tsx` → `src/features/tabs/components/tab-bar.tsx` (renamed export: `TabNavigation` → `TabBar`)
+- `src/features/navigation/components/tab-navigation/customer-tab-link.tsx` → `src/features/tabs/components/customer-tab-link.tsx`
+- `src/features/navigation/components/tab-navigation/tab-link.tsx` → `src/features/tabs/components/tab-link.tsx`
+- `src/features/navigation/components/tab-navigation/tab-link-content.tsx` → `src/features/tabs/components/tab-link-content.tsx`
+- `src/features/navigation/components/tab-navigation/tab-search.tsx` → `src/features/tabs/components/tab-search.tsx`
+- `src/features/navigation/components/tab-navigation/no-match-indicator.tsx` → `src/features/tabs/components/no-match-indicator.tsx`
+
+**Files modified:**
+- `src/features/tabs/index.ts` — added `TabBar` to barrel export
+- `src/features/navigation/components/app-navigation.tsx` — updated import to `import { TabBar } from "@/features/tabs"`
+
+**Files deleted:** `src/features/navigation/components/tab-navigation/` (entire folder)
+
+**Why:** Tab UI components belong in the `tabs` feature, not in `navigation`. This keeps the vertical slice complete: store + schemas + components all co-located. `features/navigation/` retains only `AppNavigation` (the main app navbar) which will be expanded with future features.
+
+### 8. Changed timestamps from ISO strings to numeric epoch milliseconds
+
+**Files modified:**
+- `src/features/tabs/schemas/tab.schema.ts` — `lastAccessedAt` and `createdAt` changed from `z.string().datetime()` to `z.number().int().nonnegative()`
+- `src/features/tabs/store/tabs.store.ts` — `new Date().toISOString()` → `Date.now()`
+
+**Why:** `z.string().datetime()` is deprecated in Zod v4. Numeric timestamps (`Date.now()`) are faster to compare, lighter in localStorage, require no parsing, and are consistent with how TanStack Router and TanStack Query handle timestamps internally.
+
 ---
 
 ## Architecture Decisions Log

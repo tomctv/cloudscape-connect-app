@@ -70,7 +70,7 @@ export const useTabsStore = create<TabsState & TabsActions>()(
 
       openTab: ({ id, type, resourceId, label, route }) => {
         const { tabs } = get();
-        const now = new Date().toISOString();
+        const now = Date.now();
         const existing = tabs.find((tab) => tab.id === id);
 
         if (existing) {
@@ -146,7 +146,7 @@ export const useTabsStore = create<TabsState & TabsActions>()(
         const tab = tabs.find((t) => t.id === id);
         if (!tab) return;
 
-        const now = new Date().toISOString();
+        const now = Date.now();
         set({
           activeTabId: id,
           tabs: tabs.map((t) =>
