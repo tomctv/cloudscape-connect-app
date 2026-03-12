@@ -4,13 +4,14 @@ import {
   fontSizeBodyM,
   spaceStaticXxxs,
 } from "@cloudscape-design/design-tokens";
-// import { useMemo } from "react";
+import { useMemo } from "react";
 import styled from "styled-components";
 import { TabSearch } from "./tab-search";
 import { useSearchFilter } from "@/hooks/use-search-filter";
 import { NoMatchIndicator } from "./no-match-indicator";
-// import { CustomerTabLink } from "./customer-tab-link";
-import { useLocation } from "@tanstack/react-router";
+import { CustomerTabLink } from "./customer-tab-link";
+import { useLocation, useNavigate } from "@tanstack/react-router";
+import { useTabsStore } from "@/features/tabs";
 
 type CustomTab = TabsProps.Tab & {
   title: string;
@@ -51,124 +52,87 @@ const StyledTabs = styled(Tabs)`
 
 export const TabNavigation: React.FC = () => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const tabs = useTabsStore((state) => state.tabs);
+  const setActiveTabId = useTabsStore((state) => state.setActiveTabId);
+  const closeTab = useTabsStore((state) => state.closeTab);
 
-  // const tabs = useMemo<CustomTab[]>(
-  //   () => [
-  //     {
-  //       title: "John Doe",
-  //       pathname: "/customers/01234567",
-  //       label: <CustomerTabLink customerId={"01234567"} label={"John Doe"} />,
-  //       id: "01234567",
-  //       dismissible: true,
-  //       dismissLabel: "Dismiss tab",
-  //       content: null,
-  //     },
-  //     {
-  //       title: "Marie White",
-  //       pathname: "/customers/92748590",
-  //       label: (
-  //         <CustomerTabLink customerId={"92748590"} label={"Marie White"} />
-  //       ),
-  //       id: "92748590",
-  //       dismissible: true,
-  //       dismissLabel: "Dismiss tab",
-  //       content: null,
-  //     },
-  //     {
-  //       title: "Nicolas Johnson",
-  //       pathname: "/customers/27384910",
-  //       label: (
-  //         <CustomerTabLink customerId={"27384910"} label={"Nicolas Johnson"} />
-  //       ),
-  //       id: "27384910",
-  //       dismissible: true,
-  //       dismissLabel: "Dismiss tab",
-  //       content: null,
-  //     },
-  //     {
-  //       title: "Brian Collins",
-  //       pathname: "/customers/82887365",
-  //       label: (
-  //         <CustomerTabLink customerId={"82887365"} label={"Brian Collins"} />
-  //       ),
-  //       id: "82887365",
-  //       dismissible: true,
-  //       dismissLabel: "Dismiss tab",
-  //       content: null,
-  //     },
-  //     {
-  //       title: "Lisa Simpson",
-  //       pathname: "/customers/82871543",
-  //       label: (
-  //         <CustomerTabLink customerId={"82871543"} label={"Lisa Simpson"} />
-  //       ),
-  //       id: "82871543",
-  //       dismissible: true,
-  //       dismissLabel: "Dismiss tab",
-  //       content: null,
-  //     },
-  //     {
-  //       title: "Jessica Fletcher",
-  //       pathname: "/customers/82887123",
-  //       label: (
-  //         <CustomerTabLink customerId={"82887123"} label={"Jessica Fletcher"} />
-  //       ),
-  //       id: "82887123",
-  //       dismissible: true,
-  //       dismissLabel: "Dismiss tab",
-  //       content: null,
-  //     },
-  //     {
-  //       title: "Rico Tubbs",
-  //       pathname: "/customers/82871984",
-  //       label: <CustomerTabLink customerId={"82871984"} label={"Rico Tubbs"} />,
-  //       id: "82871984",
-  //       dismissible: true,
-  //       dismissLabel: "Dismiss tab",
-  //       content: null,
-  //     },
-  //     {
-  //       title: "Marta Lynn",
-  //       pathname: "/customers/74787121",
-  //       label: <CustomerTabLink customerId={"74787121"} label={"Marta Lynn"} />,
-  //       id: "74787121",
-  //       dismissible: true,
-  //       dismissLabel: "Dismiss tab",
-  //       content: null,
-  //     },
-  //     {
-  //       title: "Sonny Crockett",
-  //       pathname: "/customers/80878184",
-  //       label: (
-  //         <CustomerTabLink customerId={"80878184"} label={"Sonny Crockett"} />
-  //       ),
-  //       id: "80878184",
-  //       dismissible: true,
-  //       dismissLabel: "Dismiss tab",
-  //       content: null,
-  //     },
-  //   ],
-  //   []
-  // );
+  const handleDismissTab = (tabId: string) => {
+    const currentTabs = useTabsStore.getState().tabs;
+    const currentActive = useTabsStore.getState().activeTabId;
+    const closedIndex = currentTabs.findIndex((t) => t.id === tabId);
 
-  const tabs: CustomTab[] = [];
+    closeTab(tabId);
+
+    // If we closed the active tab, navigate to the next active or home
+    if (currentActive === tabId) {
+      const remaining = currentTabs.filter((t) => t.id !== tabId);
+      if (remaining.length === 0) {
+        navigate({ to: "/" });
+      } else {
+        const nextIndex = Math.min(closedIndex, remaining.length - 1);
+        navigate({ to: remaining[nextIndex].route });
+      }
+    }
+  };
+
+  const cloudscapeTabs = useMemo<CustomTab[]>(
+    () =>
+      tabs.map((tab) => ({
+        id: tab.id,
+        title: tab.label,
+        pathname: tab.route,
+        dismissible: true,
+        dismissLabel: `Close ${tab.label}`,
+        content: null,
+        onDismiss: () => handleDismissTab(tab.id),
+        label:
+          tab.type === "customer" ? (
+            <CustomerTabLink
+              customerId={tab.resourceId ?? tab.id}
+              label={tab.label}
+            />
+          ) : (
+            tab.label
+          ),
+      })),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [tabs],
+  );
 
   const {
     query,
     setQuery,
     filteredItems: filteredTabs,
-  } = useSearchFilter(tabs, ["title"]);
+  } = useSearchFilter(cloudscapeTabs, ["title"]);
+
+  const handleTabChange: TabsProps["onChange"] = (event) => {
+    const tabId = event.detail.activeTabId;
+    const tab = tabs.find((t) => t.id === tabId);
+    if (!tab) return;
+
+    setActiveTabId(tabId);
+    navigate({ to: tab.route });
+  };
+
+  // Hide tab bar when there are no tabs
+  if (tabs.length === 0) {
+    return null;
+  }
+
+  // Determine the visually active tab:
+  // If the current URL matches a tab's route, highlight that tab.
+  // Otherwise (e.g., user is on /customers/search), no tab is highlighted.
+  const visualActiveTabId =
+    tabs.find((tab) => location.pathname.startsWith(tab.route))?.id ?? "";
 
   return (
     <TabsContainer>
       <TabSearch query={query} setQuery={setQuery} />
       {query && filteredTabs.length === 0 && <NoMatchIndicator />}
       <StyledTabs
-        onChange={() => {}}
-        activeTabId={
-          tabs.find((tab) => tab.pathname === location.pathname)?.id ??
-          location.pathname
-        }
+        onChange={handleTabChange}
+        activeTabId={visualActiveTabId}
         style={{
           tab: {
             activeIndicator: {

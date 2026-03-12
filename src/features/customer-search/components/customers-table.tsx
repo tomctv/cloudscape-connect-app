@@ -112,7 +112,14 @@ export const CustomersTable: React.FC<CustomersTableProps> = ({
         {
           id: "details",
           header: "Details",
-          cell: (item) => <CustomerDetailsLink customerId={item.id} />,
+          cell: (item) => (
+            <CustomerDetailsLink
+              customerId={item.id}
+              customerName={[item.firstName, item.lastName]
+                .filter(Boolean)
+                .join(" ")}
+            />
+          ),
         },
       ]}
       columnDisplay={[
