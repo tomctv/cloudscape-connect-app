@@ -1,6 +1,6 @@
 import { TopNavigation } from "@cloudscape-design/components";
 import { LogOutIcon, CalendarsIcon, UsersIcon } from "lucide-react";
-import { TabNavigation } from "./tab-navigation/tab-navigation";
+import { TabBar } from "@/features/tabs";
 import type { BaseNavigationDetail } from "node_modules/@cloudscape-design/components/internal/events";
 import { useNavigate } from "@tanstack/react-router";
 
@@ -123,7 +123,7 @@ export const AppNavigation: React.FC = () => {
           },
         ]}
       />
-      <TabNavigation />
+      <TabBar />
     </div>
   );
 };

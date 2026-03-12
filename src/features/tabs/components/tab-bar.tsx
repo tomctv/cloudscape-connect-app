@@ -11,7 +11,7 @@ import { useSearchFilter } from "@/hooks/use-search-filter";
 import { NoMatchIndicator } from "./no-match-indicator";
 import { CustomerTabLink } from "./customer-tab-link";
 import { useLocation, useNavigate } from "@tanstack/react-router";
-import { useTabsStore } from "@/features/tabs";
+import { useTabsStore } from "../store";
 
 type CustomTab = TabsProps.Tab & {
   title: string;
@@ -50,7 +50,7 @@ const StyledTabs = styled(Tabs)`
   }
 `;
 
-export const TabNavigation: React.FC = () => {
+export const TabBar: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const tabs = useTabsStore((state) => state.tabs);
