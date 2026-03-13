@@ -9,7 +9,7 @@ import { TabLink } from "./tab-link";
 import styled from "styled-components";
 import { spaceScaledS, spaceScaledXxs } from "@cloudscape-design/design-tokens";
 import { linkOptions } from "@tanstack/react-router";
-import { Icon } from "@cloudscape-design/components";
+import { Icon, Spinner } from "@cloudscape-design/components";
 
 /** Maps semantic tab icon identifiers to Cloudscape icon names. */
 const TAB_ICON_MAP: Record<TabIcon, React.ReactNode> = {
@@ -44,6 +44,7 @@ export const TabContent: React.FC<TabContentProps> = ({ tab }) => {
   };
 
   const getTabIcon = () => {
+    if (tab.status === "loading") return <Spinner size="normal" />;
     if (tab.status === "error") return <Icon name="status-warning" />;
     if (tab.icon) return TAB_ICON_MAP[tab.icon];
 

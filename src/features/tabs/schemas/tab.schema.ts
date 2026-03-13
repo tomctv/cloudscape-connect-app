@@ -30,6 +30,7 @@ export type TabIcon = z.infer<typeof TabIconSchema>;
  * - "unsaved-changes": tab has pending unsaved modifications
  */
 export const TabStatusSchema = z.enum([
+  "loading",
   "active-contact",
   "error",
   "unsaved-changes",
