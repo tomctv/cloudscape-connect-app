@@ -57,8 +57,13 @@ export const TabSchema = z.object({
   /** Display label shown in the tab bar (e.g., customer full name). */
   label: z.string(),
 
-  /** The route path this tab navigates to (e.g., "/customers/12345678"). */
-  route: z.string(),
+  /** Immutable base path set at tab creation. Used for visual active matching
+   *  (e.g., "/customers/12345678"). Never changes after creation. */
+  basePath: z.string(),
+
+  /** Current/last visited path within this tab's scope. Updated on sub-navigation
+   *  (e.g., "/customers/12345678/contacts"). Clicking the tab navigates here. */
+  activePath: z.string(),
 
   /** Semantic icon identifier, mapped to actual icons in the component layer. */
   icon: TabIconSchema.optional(),

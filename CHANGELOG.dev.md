@@ -160,6 +160,22 @@ Each entry includes what changed, why, and which files were affected — useful 
 
 **Why:** The `"loading"` status provides visual feedback while tab data is being fetched. The dismiss/navigation fix corrects two issues: (1) closing a tab while on a different route caused an unwanted redirect to `/` or the next tab; (2) `onChange` was calling `navigate()` redundantly since the tab label is already a `<TabLink>` that triggers navigation on click — doubling up caused unnecessary navigation calls. See ADR-008.
 
+### 11. Tab route memory — `basePath` + `activePath` split (Phase 2)
+
+**Files modified:**
+- `src/features/tabs/schemas/tab.schema.ts` — replaced `route` field with two fields: `basePath` (required, immutable) and `activePath` (required, mutable)
+- `src/features/tabs/store/tabs.store.ts` — `openTab` accepts `basePath`, sets `activePath = basePath` at creation; `updateTab` allows `activePath` but excludes `basePath` (immutable)
+- `src/features/tabs/components/tab-bar.tsx` — visual matching uses `tab.basePath` (`location.pathname.startsWith`); dismiss redirect uses `tab.activePath`; added `useEffect` to sync `activePath` when `location.pathname` changes within a tab's scope
+- `src/features/tabs/components/tab-content.tsx` — `getLinkOptions` simplified to always use `tab.activePath` (removed per-type switch with hardcoded route patterns)
+- `src/routes/customers/$customerId.tsx` — `onEnter` passes `basePath: match.pathname` instead of `route`
+
+**What changed:**
+- **`basePath`**: immutable path set at tab creation (e.g., `/customers/12345678`). Used for visual active matching and to determine if the current route "belongs" to a tab. Never changes after creation — intentionally excluded from `updateTab`.
+- **`activePath`**: tracks the current/last visited path within the tab's scope (e.g., `/customers/12345678/contacts`). Updated automatically via a `useEffect` in `TabBar` that watches `location.pathname`. Clicking a tab navigates to its `activePath`, so the user returns exactly where they left off.
+- **Simplified `TabContent`**: the `getLinkOptions` switch on `tab.type` was removed. Since `activePath` always contains the correct full path, all tab types use `linkOptions({ to: tab.activePath })`. This removes the coupling between `TabContent` and route patterns.
+
+**Why:** Tabs need to remember sub-routes (ADR-007). Two approaches were considered: (A) deriving the base route at runtime via a function that maps `tab.type` → URL pattern, or (B) persisting `basePath` as a field. Option B wins because it's self-contained (no external function that must know every tab type's URL structure), doesn't break when route patterns change, and works automatically for any future tab type. See ADR-009.
+
 ---
 
 ## Architecture Decisions Log
@@ -196,13 +212,18 @@ Each entry includes what changed, why, and which files were affected — useful 
 
 ### ADR-007: Tab Route Memory
 - **Decision:** Tabs remember the last visited sub-route (e.g., `/customers/123/contacts`)
-- **Status:** Planned
-- **Context:** When reopening a tab, the user should find it exactly where they left off, including any sub-route they were viewing.
+- **Status:** Implemented (Phase 2)
+- **Context:** When reopening a tab, the user should find it exactly where they left off, including any sub-route they were viewing. Implemented via `basePath` + `activePath` split (see ADR-009).
 
 ### ADR-008: No `navigate()` in Tab `onChange` — Navigation Belongs to the Link
 - **Decision:** The Cloudscape Tabs `onChange` handler must only update `activeTabId` in the store. It must NOT call `navigate()`.
 - **Status:** Implemented (Phase 1)
 - **Context:** Each tab's `label` is a `<TabLink>` (TanStack Router `createLink` wrapper). Clicking a tab already triggers navigation via the link. Adding `navigate()` in `onChange` creates a redundant navigation call. TanStack Router deduplicates same-route navigations, masking the bug, but it's conceptually wrong and fragile. Rule: when the clickable element is already a Router `<Link>`, the event handler must only manage state — never navigation.
+
+### ADR-009: `basePath` + `activePath` Split (Persisted, Not Derived)
+- **Decision:** Each tab stores two path fields: `basePath` (immutable, set at creation) and `activePath` (mutable, updated on sub-navigation). The base route is NOT derived at runtime from `tab.type`.
+- **Status:** Implemented (Phase 2)
+- **Context:** Two approaches were considered for visual matching and sub-route memory: (A) derive the base route via `getTabBaseRoute(tab)` function with a switch on `tab.type`, or (B) persist `basePath` as a field. Option A creates coupling between the function and every tab type's URL pattern — fragile, requires updates when route structures change, and the `default` case is incorrect for tabs whose `activePath` has drifted from the base. Option B is self-contained: each tab carries its own anchor path, no external knowledge needed, works for any tab type without code changes.
 
 ---
 

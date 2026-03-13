@@ -4,7 +4,7 @@ import {
   fontSizeBodyM,
   spaceStaticXxxs,
 } from "@cloudscape-design/design-tokens";
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import styled from "styled-components";
 import { TabSearch } from "./tab-search";
 import { useSearchFilter } from "@/hooks/use-search-filter";
@@ -55,9 +55,20 @@ export const TabBar: React.FC = () => {
   const tabs = useTabsStore((state) => state.tabs);
   const setActiveTabId = useTabsStore((state) => state.setActiveTabId);
   const closeTab = useTabsStore((state) => state.closeTab);
+  const updateTab = useTabsStore((state) => state.updateTab);
+
+  // Sync activePath: when the user navigates within a tab's scope,
+  // update that tab's activePath so clicking the tab later restores the sub-route.
+  useEffect(() => {
+    const matchingTab = tabs.find((tab) =>
+      location.pathname.startsWith(tab.basePath),
+    );
+    if (matchingTab && matchingTab.activePath !== location.pathname) {
+      updateTab(matchingTab.id, { activePath: location.pathname });
+    }
+  }, [location.pathname, tabs, updateTab]);
 
   const handleDismissTab = (tabId: string) => {
-    console.log("TABS onDismiss");
     const currentTabs = useTabsStore.getState().tabs;
     const closedIndex = currentTabs.findIndex((t) => t.id === tabId);
     const closedTab = currentTabs[closedIndex];
@@ -65,13 +76,13 @@ export const TabBar: React.FC = () => {
     closeTab(tabId);
 
     // Only redirect if the current route belongs to the closed tab
-    if (closedTab && location.pathname.startsWith(closedTab.route)) {
+    if (closedTab && location.pathname.startsWith(closedTab.basePath)) {
       const remaining = currentTabs.filter((t) => t.id !== tabId);
       if (remaining.length === 0) {
         navigate({ to: "/" });
       } else {
         const nextIndex = Math.min(closedIndex, remaining.length - 1);
-        navigate({ to: remaining[nextIndex].route });
+        navigate({ to: remaining[nextIndex].activePath });
       }
     }
   };
@@ -111,10 +122,10 @@ export const TabBar: React.FC = () => {
   }
 
   // Determine the visually active tab:
-  // If the current URL matches a tab's route, highlight that tab.
+  // If the current URL falls within a tab's basePath, highlight that tab.
   // Otherwise (e.g., user is on /customers/search), no tab is highlighted.
   const visualActiveTabId =
-    tabs.find((tab) => location.pathname.startsWith(tab.route))?.id ?? "";
+    tabs.find((tab) => location.pathname.startsWith(tab.basePath))?.id ?? "";
 
   return (
     <TabsContainer>

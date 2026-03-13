@@ -32,15 +32,7 @@ const StyledTabContent = styled.span`
 
 export const TabContent: React.FC<TabContentProps> = ({ tab }) => {
   const getLinkOptions = () => {
-    switch (tab.type) {
-      case "customer":
-        return linkOptions({
-          to: "/customers/$customerId",
-          params: { customerId: tab.id },
-        });
-      default:
-        return linkOptions({ to: tab.route });
-    }
+    return linkOptions({ to: tab.activePath });
   };
 
   const getTabIcon = () => {

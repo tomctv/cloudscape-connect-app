@@ -29,7 +29,7 @@ interface TabsActions {
     type: TabType;
     resourceId?: string;
     label: string;
-    route: string;
+    basePath: string;
     icon?: TabIcon;
     isPinned?: boolean;
     closable?: boolean;
@@ -47,11 +47,11 @@ interface TabsActions {
   /** Set the active tab by ID (or null to deselect all tabs). */
   setActiveTabId: (id: string | null) => void;
 
-  /** Update a tab's mutable properties. */
+  /** Update a tab's mutable properties. basePath is intentionally excluded (immutable). */
   updateTab: (
     id: string,
     updates: Partial<
-      Pick<Tab, "label" | "route" | "icon" | "status" | "isPinned" | "closable">
+      Pick<Tab, "label" | "activePath" | "icon" | "status" | "isPinned" | "closable">
     >,
   ) => void;
 
@@ -77,7 +77,7 @@ export const useTabsStore = create<TabsState & TabsActions>()(
     (set, get) => ({
       ...initialState,
 
-      openTab: ({ id, type, resourceId, label, route, icon, isPinned, closable }) => {
+      openTab: ({ id, type, resourceId, label, basePath, icon, isPinned, closable }) => {
         const { tabs } = get();
         const now = Date.now();
         const existing = tabs.find((tab) => tab.id === id);
@@ -98,7 +98,8 @@ export const useTabsStore = create<TabsState & TabsActions>()(
           type,
           resourceId,
           label,
-          route,
+          basePath,
+          activePath: basePath,
           icon,
           isPinned,
           closable,

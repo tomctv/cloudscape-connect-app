@@ -26,7 +26,6 @@ export const Route = createFileRoute("/customers/$customerId")({
   },
   onEnter: (match) => {
     const customerId = match.params.customerId;
-    const route = match.pathname;
     const label = match.search.customerName ?? customerId;
 
     useTabsStore.getState().openTab({
@@ -34,7 +33,7 @@ export const Route = createFileRoute("/customers/$customerId")({
       type: "customer",
       resourceId: customerId,
       label,
-      route,
+      basePath: match.pathname,
       icon: "customer-default",
     });
   },
