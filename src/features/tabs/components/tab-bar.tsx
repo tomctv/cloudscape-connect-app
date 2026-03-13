@@ -57,14 +57,15 @@ export const TabBar: React.FC = () => {
   const closeTab = useTabsStore((state) => state.closeTab);
 
   const handleDismissTab = (tabId: string) => {
+    console.log("TABS onDismiss");
     const currentTabs = useTabsStore.getState().tabs;
-    const currentActive = useTabsStore.getState().activeTabId;
     const closedIndex = currentTabs.findIndex((t) => t.id === tabId);
+    const closedTab = currentTabs[closedIndex];
 
     closeTab(tabId);
 
-    // If we closed the active tab, navigate to the next active or home
-    if (currentActive === tabId) {
+    // Only redirect if the current route belongs to the closed tab
+    if (closedTab && location.pathname.startsWith(closedTab.route)) {
       const remaining = currentTabs.filter((t) => t.id !== tabId);
       if (remaining.length === 0) {
         navigate({ to: "/" });
@@ -102,7 +103,6 @@ export const TabBar: React.FC = () => {
     if (!tab) return;
 
     setActiveTabId(tabId);
-    navigate({ to: tab.route });
   };
 
   // Hide tab bar when there are no tabs

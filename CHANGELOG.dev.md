@@ -149,6 +149,17 @@ Each entry includes what changed, why, and which files were affected — useful 
 
 **Why:** Richer tab metadata enables better UX: visual differentiation by customer status, pinning for frequently used tabs, protecting important tabs from accidental closure, and status indicators for at-a-glance awareness. Consolidating rendering into `TabContent` simplifies the component tree and makes adding new tab types straightforward (one `case` in the switch). All new fields are optional and backward-compatible with existing persisted data (schema version stays at 1).
 
+### 10. Added `"loading"` tab status + spinner, fixed tab dismiss/navigation logic
+
+**Files modified:**
+- `src/features/tabs/schemas/tab.schema.ts` — added `"loading"` to `TabStatusSchema`
+- `src/features/tabs/components/tab-content.tsx` — imported Cloudscape `Spinner`, renders `<Spinner size="normal" />` when `tab.status === "loading"` (checked before error and icon)
+- `src/features/tabs/components/tab-bar.tsx` — two fixes:
+  1. **`handleDismissTab`**: redirect now only happens when `location.pathname.startsWith(closedTab.route)` (i.e., the user is currently viewing the closed tab). If the user is on a non-tab route like `/customers/search`, closing a tab no longer causes unwanted navigation.
+  2. **`handleTabChange`**: removed `navigate()` call — only updates `activeTabId` via store. Navigation is already handled by `<TabLink>` (TanStack Router link) inside `<TabContent>`.
+
+**Why:** The `"loading"` status provides visual feedback while tab data is being fetched. The dismiss/navigation fix corrects two issues: (1) closing a tab while on a different route caused an unwanted redirect to `/` or the next tab; (2) `onChange` was calling `navigate()` redundantly since the tab label is already a `<TabLink>` that triggers navigation on click — doubling up caused unnecessary navigation calls. See ADR-008.
+
 ---
 
 ## Architecture Decisions Log
@@ -187,6 +198,11 @@ Each entry includes what changed, why, and which files were affected — useful 
 - **Decision:** Tabs remember the last visited sub-route (e.g., `/customers/123/contacts`)
 - **Status:** Planned
 - **Context:** When reopening a tab, the user should find it exactly where they left off, including any sub-route they were viewing.
+
+### ADR-008: No `navigate()` in Tab `onChange` — Navigation Belongs to the Link
+- **Decision:** The Cloudscape Tabs `onChange` handler must only update `activeTabId` in the store. It must NOT call `navigate()`.
+- **Status:** Implemented (Phase 1)
+- **Context:** Each tab's `label` is a `<TabLink>` (TanStack Router `createLink` wrapper). Clicking a tab already triggers navigation via the link. Adding `navigate()` in `onChange` creates a redundant navigation call. TanStack Router deduplicates same-route navigations, masking the bug, but it's conceptually wrong and fragile. Rule: when the clickable element is already a Router `<Link>`, the event handler must only manage state — never navigation.
 
 ---
 
