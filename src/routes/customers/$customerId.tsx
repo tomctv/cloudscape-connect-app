@@ -24,19 +24,6 @@ export const Route = createFileRoute("/customers/$customerId")({
 
     if (!result.success) throw notFound();
   },
-  onEnter: (match) => {
-    const customerId = match.params.customerId;
-    const label = match.search.customerName ?? customerId;
-
-    useTabsStore.getState().openTab({
-      id: customerId,
-      type: "customer",
-      resourceId: customerId,
-      label,
-      basePath: match.pathname,
-      icon: "customer-default",
-    });
-  },
   loader: async ({
     params: { customerId },
     context: { queryClient },
@@ -52,6 +39,19 @@ export const Route = createFileRoute("/customers/$customerId")({
       }
       throw error;
     }
+  },
+  onEnter: (match) => {
+    const customerId = match.params.customerId;
+    const label = match.search.customerName ?? customerId;
+
+    useTabsStore.getState().openTab({
+      id: customerId,
+      type: "customer",
+      resourceId: customerId,
+      label,
+      basePath: match.pathname,
+      icon: "customer-default",
+    });
   },
   component: RouteComponent,
   pendingComponent: () => (

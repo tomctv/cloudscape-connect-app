@@ -59,14 +59,22 @@ export const TabBar: React.FC = () => {
 
   // Sync activePath: when the user navigates within a tab's scope,
   // update that tab's activePath so clicking the tab later restores the sub-route.
+  // When a maskedLocation is present (e.g., masked search params like customerName),
+  // use maskedLocation.href to persist the clean URL without transit params.
   useEffect(() => {
     const matchingTab = tabs.find((tab) =>
       location.pathname.startsWith(tab.basePath),
     );
-    if (matchingTab && matchingTab.activePath !== location.pathname) {
-      updateTab(matchingTab.id, { activePath: location.pathname });
+    if (!matchingTab) return;
+
+    const maskedLocation = (location as unknown as Record<string, unknown>)
+      .maskedLocation as typeof location | undefined;
+    const effectiveHref = maskedLocation?.href ?? location.href;
+
+    if (matchingTab.activePath !== effectiveHref) {
+      updateTab(matchingTab.id, { activePath: effectiveHref });
     }
-  }, [location.pathname, tabs, updateTab]);
+  }, [location, tabs, updateTab]);
 
   const handleDismissTab = (tabId: string) => {
     const currentTabs = useTabsStore.getState().tabs;

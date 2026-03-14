@@ -176,6 +176,19 @@ Each entry includes what changed, why, and which files were affected — useful 
 
 **Why:** Tabs need to remember sub-routes (ADR-007). Two approaches were considered: (A) deriving the base route at runtime via a function that maps `tab.type` → URL pattern, or (B) persisting `basePath` as a field. Option B wins because it's self-contained (no external function that must know every tab type's URL structure), doesn't break when route patterns change, and works automatically for any future tab type. See ADR-009.
 
+### 12. Search params persistence in `activePath` via `location.href` + `maskedLocation` handling
+
+**Files modified:**
+- `src/features/tabs/components/tab-bar.tsx` — `activePath` sync `useEffect` now uses `location.href` (includes search params and hash) instead of `location.pathname`. When `location.maskedLocation` is present (masked navigation via TanStack Router's `mask` feature), uses `maskedLocation.href` instead to avoid persisting transit search params (e.g., `customerName`). Dependency changed from `location.pathname` to `location` (full object).
+
+**What changed:**
+- `activePath` now stores the full href including search params (e.g., `/customers/10000036/contacts?channel=VOICE_INBOUND`)
+- Clicking a tab restores both the sub-route and any active filters/search params
+- Masked search params (like `customerName` passed via `CustomerDetailsLink`) are correctly excluded: when TanStack Router navigates with `mask`, the `location` object contains a `maskedLocation` property with the "clean" URL. The sync logic uses `maskedLocation.href` when present, falling back to `location.href` otherwise.
+- `maskedLocation` is not exposed in TanStack Router's public `ParsedLocation` type, so it's accessed via `as unknown as Record<string, unknown>` cast.
+
+**Why:** Sub-route memory (Phase 2) was incomplete without search params — navigating to `/customers/123/contacts?channel=VOICE_INBOUND`, switching to another tab, and coming back would lose the `?channel=VOICE_INBOUND` filter. Using `location.href` captures everything. The `maskedLocation` check prevents transit params (passed via `mask` for `onEnter` data) from leaking into `activePath` and being exposed in the URL on subsequent tab clicks.
+
 ---
 
 ## Architecture Decisions Log
@@ -228,7 +241,5 @@ Each entry includes what changed, why, and which files were affected — useful 
 ---
 
 ## Next Steps
-- **Phase 2:** Tab state restore on app mount (navigate to last active tab)
-- **Phase 3:** localStorage persistence hardening (Zod validation, error recovery)
-- **Phase 4:** Search params persistence (hybrid URL + localStorage)
-- **Phase 5:** Amazon Connect integration layer
+- **Phase 2 (remaining):** Tab state restore on app mount (navigate to last active tab on remount)
+- **Phase 3:** Amazon Connect integration layer (@amazon-connect/app SDK)
