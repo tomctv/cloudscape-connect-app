@@ -33,6 +33,10 @@ declare module "@tanstack/react-router" {
   }
 }
 
+// Initialize Amazon Connect provider (no-op in local dev)
+import { initConnectProvider } from "@/features/amazon-connect";
+initConnectProvider();
+
 // Validate environment before rendering
 if (!env.VITE_API_BASE_URL) {
   throw new Error("API Base URL is not configured");
