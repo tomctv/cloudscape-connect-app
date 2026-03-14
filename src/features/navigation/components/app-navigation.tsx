@@ -1,8 +1,6 @@
 import { TopNavigation } from "@cloudscape-design/components";
-import { LogOutIcon } from "@/components/icons/log-out";
-import { UsersIcon } from "@/components/icons/users";
-import { CalendarsIcon } from "@/components/icons/calendars";
-import { TabNavigation } from "./tab-navigation/tab-navigation";
+import { LogOutIcon, CalendarsIcon, UsersIcon } from "lucide-react";
+import { TabBar } from "@/features/tabs";
 import type { BaseNavigationDetail } from "node_modules/@cloudscape-design/components/internal/events";
 import { useNavigate } from "@tanstack/react-router";
 
@@ -15,10 +13,6 @@ export const AppNavigation: React.FC = () => {
         identity={{
           href: "/",
           title: "Connect+",
-          logo: {
-            src: "src/assets/app-logo-small.svg",
-            alt: "Connect+",
-          },
         }}
         utilities={[
           {
@@ -129,7 +123,7 @@ export const AppNavigation: React.FC = () => {
           },
         ]}
       />
-      <TabNavigation />
+      <TabBar />
     </div>
   );
 };

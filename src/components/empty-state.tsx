@@ -1,14 +1,9 @@
-import {
-  Box,
-  Button,
-  SpaceBetween,
-  type ButtonProps,
-} from "@cloudscape-design/components";
+import { Box } from "@cloudscape-design/components";
 
 interface EmptyStateProps {
-  heading?: string;
-  description?: string;
-  buttonProps?: ButtonProps;
+  title?: string;
+  subtitle?: string;
+  action?: React.ReactNode;
 }
 
 /**
@@ -18,19 +13,19 @@ interface EmptyStateProps {
  * @returns
  */
 export const EmptyState: React.FC<EmptyStateProps> = ({
-  heading,
-  description,
-  buttonProps,
+  title,
+  subtitle,
+  action,
 }) => {
   return (
-    <Box margin={{ vertical: "xs" }} textAlign="center" color="inherit">
-      <SpaceBetween size="m">
-        <SpaceBetween size="xxxs">
-          <b>{heading || "No items"}</b>
-          {description && <span>{description}</span>}
-        </SpaceBetween>
-        {buttonProps && <Button {...buttonProps} />}
-      </SpaceBetween>
+    <Box textAlign="center" color="inherit">
+      <Box variant="strong" textAlign="center" color="inherit">
+        {title}
+      </Box>
+      <Box variant="p" padding={{ bottom: "s" }} color="inherit">
+        {subtitle}
+      </Box>
+      {action}
     </Box>
   );
 };

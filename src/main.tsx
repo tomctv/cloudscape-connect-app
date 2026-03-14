@@ -21,7 +21,10 @@ const locale = document.documentElement.lang;
 const messages = await importMessages(locale);
 
 // Create a new router instance
-const router = createRouter({ routeTree });
+const router = createRouter({
+  routeTree,
+  context: { queryClient },
+});
 
 // Register the router instance for type safety
 declare module "@tanstack/react-router" {
@@ -52,6 +55,6 @@ if (!rootElement.innerHTML) {
           )}
         </I18nProvider>
       </QueryClientProvider>
-    </StrictMode>
+    </StrictMode>,
   );
 }

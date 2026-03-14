@@ -29,8 +29,8 @@ export const CustomerSearchPage: React.FC = () => {
         }
         empty={
           <EmptyState
-            heading="No customers"
-            description={
+            title="No customers"
+            subtitle={
               customersData?.data.length === 0
                 ? "No customers matching the filter criteria"
                 : "Apply some filters to find customers"

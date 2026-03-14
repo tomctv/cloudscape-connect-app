@@ -1,6 +1,3 @@
-import React from "react";
-import { createLink, Link, type LinkComponent } from "@tanstack/react-router";
-import styled from "styled-components";
 import {
   colorTextLinkDefault,
   colorTextLinkHover,
@@ -8,6 +5,9 @@ import {
   spaceScaledXxs,
 } from "@cloudscape-design/design-tokens";
 import { Icon } from "@cloudscape-design/components";
+import styled from "styled-components";
+import { createLink, Link, type LinkComponent } from "@tanstack/react-router";
+import React from "react";
 
 const StyledAnchor = styled(Link)`
   all: unset;
@@ -36,20 +36,27 @@ const BasicLinkComponent = React.forwardRef<
 const CreatedLinkComponent = createLink(BasicLinkComponent);
 
 const CustomLink: LinkComponent<typeof BasicLinkComponent> = (props) => {
-  return <CreatedLinkComponent preload={"viewport"} {...props} />;
+  return <CreatedLinkComponent preload={"intent"} {...props} />;
 };
 
 interface CustomerDetailsLinkProps {
   customerId: string;
+  customerName?: string;
 }
 
 export const CustomerDetailsLink: React.FC<CustomerDetailsLinkProps> = ({
   customerId,
+  customerName,
 }) => {
   return (
     <CustomLink
       to="/customers/$customerId"
       params={{ customerId }}
+      search={{ customerName }}
+      mask={{
+        to: "/customers/$customerId",
+        params: { customerId },
+      }}
       aria-label="Open customer page"
     >
       <StyledLinkContent>
