@@ -10,6 +10,10 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@amazon-connect/app": "^1.0.11",
+    "@amazon-connect/contact": "^1.0.11",
+    "@amazon-connect/email": "^1.0.11",
+    "@amazon-connect/voice": "^1.0.11",
     "@cloudscape-design/collection-hooks": "^1.0.82",
     "@cloudscape-design/component-toolkit": "^1.0.0-beta.138",
     "@cloudscape-design/components": "^3.0.1212",

@@ -189,6 +189,34 @@ Each entry includes what changed, why, and which files were affected — useful 
 
 **Why:** Sub-route memory (Phase 2) was incomplete without search params — navigating to `/customers/123/contacts?channel=VOICE_INBOUND`, switching to another tab, and coming back would lose the `?channel=VOICE_INBOUND` filter. Using `location.href` captures everything. The `maskedLocation` check prevents transit params (passed via `mask` for `onEnter` data) from leaking into `activePath` and being exposed in the URL on subsequent tab clicks.
 
+### 13. Amazon Connect SDK integration layer (Phase 3)
+
+**Packages installed:**
+- `@amazon-connect/app` — core SDK, lifecycle events (`onCreate`, `onDestroy`)
+- `@amazon-connect/contact` — `ContactClient` (contact lifecycle) + `AgentClient` (agent info/state)
+- `@amazon-connect/voice` — `VoiceClient` (calls, hold/resume, conference)
+- `@amazon-connect/email` — `EmailClient` (email data, drafts, send)
+
+**Files created:**
+- `src/features/amazon-connect/provider/connect-provider.ts` — `initConnectProvider()` calls `AmazonConnectApp.init()` when inside the Agent Workspace iframe; returns `null` in local dev (detects iframe via `window.self !== window.top`). `getConnectProvider()` returns the cached provider.
+- `src/features/amazon-connect/clients/create-client.ts` — generic factory `createClientGetter()` for lazy-initializing SDK clients. Returns `null` when provider is unavailable.
+- `src/features/amazon-connect/clients/agent-client.ts` — `getAgentClient()` singleton getter
+- `src/features/amazon-connect/clients/contact-client.ts` — `getContactClient()` singleton getter
+- `src/features/amazon-connect/clients/voice-client.ts` — `getVoiceClient()` singleton getter
+- `src/features/amazon-connect/clients/email-client.ts` — `getEmailClient()` singleton getter
+- `src/features/amazon-connect/clients/index.ts` — clients barrel export
+- `src/features/amazon-connect/provider/index.ts` — provider barrel export
+- `src/features/amazon-connect/index.ts` — public API barrel export
+
+**Architecture:**
+- Provider is initialized once at app startup via `initConnectProvider()`
+- Clients are lazy singletons: created on first `getXxxClient()` call using the provider
+- All getters return `T | null` — `null` means not available (local dev or provider not initialized)
+- Consumers check for null before using clients, enabling graceful degradation outside the workspace
+- Additional clients (`FileClient`, `ActivityClient`, etc.) can be added later by installing their packages and creating a new getter file
+
+**Why:** The Amazon Connect SDK requires initialization inside the Agent Workspace iframe. This integration layer provides a clean abstraction: the provider handles lifecycle, the factory pattern keeps client creation consistent, and the null-returning getters enable safe local development without mocks or conditional imports.
+
 ---
 
 ## Architecture Decisions Log
