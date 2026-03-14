@@ -33,9 +33,9 @@ declare module "@tanstack/react-router" {
   }
 }
 
-// Initialize Amazon Connect provider (no-op in local dev)
+// Initialize Amazon Connect provider and apply theme (no-op in local dev)
 import { initConnectProvider } from "@/features/amazon-connect";
-initConnectProvider();
+await initConnectProvider();
 
 // Validate environment before rendering
 if (!env.VITE_API_BASE_URL) {

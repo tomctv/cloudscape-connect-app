@@ -1,4 +1,5 @@
 import { AmazonConnectApp } from "@amazon-connect/app";
+import { applyConnectTheme } from "@amazon-connect/theme";
 import type { AmazonConnectProvider } from "@amazon-connect/core";
 
 /**
@@ -19,7 +20,7 @@ let provider: AmazonConnectProvider | null = null;
  * In local development (not in an iframe), skips initialization and returns null.
  * Clients should check for a null provider before making SDK calls.
  */
-export function initConnectProvider(): AmazonConnectProvider | null {
+export async function initConnectProvider(): Promise<AmazonConnectProvider | null> {
   if (!isEmbeddedInWorkspace) {
     console.warn(
       "[AmazonConnect] Not running inside Agent Workspace iframe. " +
@@ -43,6 +44,8 @@ export function initConnectProvider(): AmazonConnectProvider | null {
   });
 
   provider = result.provider;
+  await applyConnectTheme(provider);
+
   return provider;
 }
 
