@@ -34,7 +34,7 @@ const CustomerTabContentInner = memo(
         });
     }, [tabId, customer, updateTab]);
 
-    return <CustomerPage customerId={customerId} />;
+    return <CustomerPage customerId={customerId} tabId={tabId} />;
   },
 );
 

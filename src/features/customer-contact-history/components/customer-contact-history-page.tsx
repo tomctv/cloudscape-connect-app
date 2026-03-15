@@ -1,5 +1,5 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { getRouteApi } from "@tanstack/react-router";
 import { type DateRangePickerProps } from "@cloudscape-design/components";
 import { subDays, subMonths, subYears, format } from "date-fns";
 import { customerContactsQueryOptions } from "../api/query-options";
@@ -8,7 +8,9 @@ import type { ContactChannelOption } from "@/components/contact-channel-select";
 import type { ContactChannel } from "@/lib/validation";
 import { TableHeader } from "./contact-history-table.tsx/table-header.tsx";
 
-const routeApi = getRouteApi("/customers/$customerId/contacts");
+interface CustomerContactHistoryPageProps {
+  customerId: string;
+}
 
 function resolveToAbsoluteDates(range: DateRangePickerProps.Value): {
   startDate: string;
@@ -41,15 +43,13 @@ function resolveToAbsoluteDates(range: DateRangePickerProps.Value): {
   };
 }
 
-export const CustomerContactHistoryPage: React.FC = () => {
-  const { customerId } = routeApi.useParams();
-  const {
-    startDate,
-    endDate,
-    channel,
-    q: filteringText = "",
-  } = routeApi.useSearch();
-  const navigate = routeApi.useNavigate();
+export const CustomerContactHistoryPage: React.FC<
+  CustomerContactHistoryPageProps
+> = ({ customerId }) => {
+  const [startDate, setStartDate] = useState<string | undefined>();
+  const [endDate, setEndDate] = useState<string | undefined>();
+  const [channel, setChannel] = useState<ContactChannel | undefined>();
+  const [filteringText, setFilteringText] = useState("");
 
   const { data, isLoading, isError, refetch } = useQuery(
     customerContactsQueryOptions({ customerId, startDate, endDate }),
@@ -59,50 +59,32 @@ export const CustomerContactHistoryPage: React.FC = () => {
     startDate && endDate ? { type: "absolute", startDate, endDate } : null;
 
   const selectedChannel: ContactChannelOption | null = channel
-    ? { value: channel as ContactChannel }
+    ? { value: channel }
     : { value: "ALL" };
 
   const handleDateRangeChange = (value: DateRangePickerProps.Value | null) => {
     if (!value) {
-      void navigate({
-        search: (prev) => ({
-          ...prev,
-          startDate: undefined,
-          endDate: undefined,
-        }),
-      });
+      setStartDate(undefined);
+      setEndDate(undefined);
       return;
     }
     const { startDate: resolvedStart, endDate: resolvedEnd } =
       resolveToAbsoluteDates(value);
-    void navigate({
-      search: (prev) => ({
-        ...prev,
-        startDate: resolvedStart,
-        endDate: resolvedEnd,
-      }),
-    });
+    setStartDate(resolvedStart);
+    setEndDate(resolvedEnd);
   };
 
   const handleChannelChange = (option: ContactChannelOption) => {
-    void navigate({
-      search: (prev) => ({
-        ...prev,
-        channel: option.value === "ALL" ? undefined : option.value,
-      }),
-    });
+    setChannel(option.value === "ALL" ? undefined : option.value);
   };
 
   const handleFilteringTextChange = (text: string) => {
-    void navigate({
-      search: (prev) => ({ ...prev, q: text || undefined }),
-    });
+    setFilteringText(text);
   };
 
   const handleClearFilters = () => {
-    void navigate({
-      search: (prev) => ({ ...prev, q: undefined, channel: undefined }),
-    });
+    setFilteringText("");
+    setChannel(undefined);
   };
 
   return (

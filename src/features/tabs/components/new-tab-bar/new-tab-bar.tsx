@@ -2,10 +2,14 @@ import { useLocation, useNavigate } from "@tanstack/react-router";
 import { useTabsStore } from "../../store";
 import { TabItem } from "./tab-item";
 import styled from "styled-components";
-import { colorBorderDividerDefault } from "@cloudscape-design/design-tokens";
+import {
+  colorBackgroundContainerContent,
+  colorBorderDividerDefault,
+} from "@cloudscape-design/design-tokens";
 import type React from "react";
 
 const TabsList = styled.ul`
+  background-color: ${colorBackgroundContainerContent};
   list-style: none;
   margin: 0;
   padding: 0;
