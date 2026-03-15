@@ -3,13 +3,20 @@ import { LogOutIcon, CalendarsIcon, UsersIcon } from "lucide-react";
 import { TabBar } from "@/features/tabs";
 import type { BaseNavigationDetail } from "node_modules/@cloudscape-design/components/internal/events";
 import { useNavigate } from "@tanstack/react-router";
+import styled from "styled-components";
+
+const StyledTopNavigation = styled(TopNavigation)`
+  [class*="awsui_padding-box"] {
+    max-height: 48px !important;
+  }
+`;
 
 export const AppNavigation: React.FC = () => {
   const navigate = useNavigate();
 
   return (
     <div id="app-header" style={{ position: "sticky", top: 0, zIndex: 1002 }}>
-      <TopNavigation
+      <StyledTopNavigation
         identity={{
           href: "/",
           title: "Connect+",
