@@ -13,6 +13,7 @@ import { useLayoutContext } from "@/features/layout/hooks/use-layout-context";
 import { CalendarPlusIcon, NotebookPenIcon } from "lucide-react";
 
 interface CustomerNavbarProps {
+  customerId: string;
   notesOpen: boolean;
   onNotesToggle: () => void;
 }
@@ -34,13 +35,14 @@ const StyledNavbar = styled.div<{ $verticalOffset: number }>`
 `;
 
 export const CustomerNavbar: React.FC<CustomerNavbarProps> = ({
+  customerId,
   onNotesToggle,
 }) => {
   const { headerHeight } = useLayoutContext();
 
   return (
     <StyledNavbar id="customer-navbar" $verticalOffset={headerHeight ?? 0}>
-      <CustomerBreadcrumbs />
+      <CustomerBreadcrumbs customerId={customerId} />
       <ButtonGroup
         variant="icon"
         items={[

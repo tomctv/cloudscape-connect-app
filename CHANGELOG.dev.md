@@ -240,6 +240,117 @@ Each entry includes what changed, why, and which files were affected — useful 
 
 ---
 
+## [2026-03-12] Session 3 — Phase 3: Amazon Connect Integration Layer
+
+### 13. Amazon Connect SDK integration — provider init + client singletons
+
+**Files created:**
+- `src/features/amazon-connect/provider/connect-provider.ts` — `initConnectProvider()` (async, detects iframe, applies theme) + `getConnectProvider()` singleton getter
+- `src/features/amazon-connect/provider/index.ts` — barrel export
+- `src/features/amazon-connect/clients/agent-client.ts` — lazy singleton `getAgentClient()` from `@amazon-connect/contact`
+- `src/features/amazon-connect/clients/contact-client.ts` — lazy singleton `getContactClient()` from `@amazon-connect/contact`
+- `src/features/amazon-connect/clients/voice-client.ts` — lazy singleton `getVoiceClient()` from `@amazon-connect/voice`
+- `src/features/amazon-connect/clients/email-client.ts` — lazy singleton `getEmailClient()` from `@amazon-connect/email`
+- `src/features/amazon-connect/clients/index.ts` — barrel export
+- `src/features/amazon-connect/index.ts` — public API barrel
+
+**Files modified:**
+- `src/main.tsx` — calls `await initConnectProvider()` at startup before rendering
+
+**What changed:**
+- `initConnectProvider()` detects if running inside Agent Workspace iframe (`window.self !== window.top`). In local dev (not in iframe), returns `null` and logs a warning — no SDK timeout errors.
+- After `AmazonConnectApp.init()`, applies the Agent Workspace theme via `await applyConnectTheme(provider)` from `@amazon-connect/theme`.
+- Each client follows the same lazy singleton pattern: on first call, creates the client with the provider; on subsequent calls, returns the cached instance. Returns `null` if provider unavailable (local dev).
+
+**Why:** Phase 3 establishes the integration layer without wiring events yet. All Amazon Connect SDK access goes through these getters, making it easy to mock for local dev in the future.
+
+---
+
+## [2026-03-15] Session 4 — Browser-Like Tab Navigation (Instant Tab Switching)
+
+### 14. Browser-like tab switching with `display: none` / `display: contents`
+
+**Files created:**
+- `src/features/tabs/components/tab-panels.tsx` — `TabPanels` component: renders ALL open tab panels simultaneously, hides inactive ones with `display: none`, shows active one with `display: contents`. Determines visibility from Zustand `activeTabId` + `isTabRoute` check.
+- `src/features/customer/components/customer-tab-panel.tsx` — `CustomerTabPanel` wrapping customer-specific content with its own `<Suspense>` boundary and loading fallback. Contains `CustomerTabContentInner` (memoized with `React.memo`) for data fetching and tab label/icon sync.
+
+**Files modified:**
+- `src/routes/__root.tsx` — added `<TabPanels />` alongside `<Outlet />` in the root layout
+- `src/routes/customers/$customerId.tsx` — route component changed to `() => null`. Route still provides `onEnter` (tab creation), `beforeLoad` (validation), `loader` (data prefetch), `validateSearch`. Content rendering delegated to `TabPanels`.
+- `src/features/customer/components/customer-page.tsx` — accepts `customerId` as prop (no longer reads from route). Removed `<Outlet />` (no sub-routes).
+- `src/features/customer/components/customer-header/customer-header.tsx` — accepts `customerId` as prop, removed `getRouteApi`, removed contacts link
+- `src/features/customer/components/customer-navbar/customer-navbar.tsx` — accepts `customerId` as prop, passes to `CustomerBreadcrumbs`
+- `src/features/customer/components/customer-navbar/customer-breadcrumbs.tsx` — accepts `customerId` as prop, removed `getRouteApi`
+- `src/features/customer/components/customer-information-card/customer-information-card.tsx` — accepts `customerId` as prop, removed `getRouteApi`
+
+**Files deleted:**
+- `src/routes/customers/$customerId.contacts.tsx` — contacts sub-route removed (will be reimplemented as hash-based sub-navigation)
+
+**Architecture:**
+
+Two separate rendering mechanisms now coexist:
+1. **`<TabPanels />`** — renders tab content. Panels are always mounted, hidden with CSS. Switching is instant (no mount/unmount, no re-render, just CSS change).
+2. **`<Outlet />`** — renders non-tab routes (`/customers/search`, `/settings`, etc.) normally via TanStack Router.
+
+Tab route components return `null` — their purpose is URL matching, `onEnter` for tab creation, and `loader` for data prefetch. The actual content is rendered by `TabPanels`.
+
+**Why:** Switching between tabs caused visible lag because TanStack Router unmounts the old route component and mounts the new one. With complex Cloudscape components (AppLayoutToolbar, ContentLayout, Tabs with 5 sub-tabs), this mount/unmount cycle was slow. The `display: none` approach keeps all tab DOM trees alive in memory — switching is a pure CSS change, identical to how browsers handle tabs.
+
+### 15. Instant tab switch: bypass TanStack Router navigation on tab click
+
+**Files modified:**
+- `src/features/tabs/components/new-tab-bar/new-tab-bar.tsx` — tab click handler replaced `navigate({ to: tab.activePath })` with `window.history.pushState(null, "", tab.activePath)`. `setActiveTabId()` (Zustand, sync) handles the visual switch; `pushState` updates the browser URL without triggering TanStack Router's async pipeline.
+
+**What changed:**
+- Clicking an already-open tab no longer goes through TanStack Router's `navigate()` (which runs route matching → `beforeLoad` → `loader` → render).
+- Instead: `setActiveTabId()` updates Zustand immediately (sync) → `TabPanels` re-renders → CSS switches the visible panel. URL updated via `pushState` (instant, no router involvement).
+- TanStack Router is unaware of the URL change (`pushState` doesn't trigger `popstate`), but this doesn't matter: tab content is driven by Zustand, not by the router. The next "real" TanStack Router navigation (opening a new customer, navigating to a non-tab route) re-syncs the router with the actual URL.
+
+**Why:** Even with the `display: none` approach, `navigate()` introduced lag because TanStack Router's navigation pipeline is async. Bypassing it makes the switch truly instantaneous.
+
+### 16. Performance: memoized tab panel content to prevent cascading re-renders
+
+**Files modified:**
+- `src/features/customer/components/customer-tab-panel.tsx` — `CustomerTabContentInner` wrapped with `React.memo`, receives only stable primitive props (`customerId: string`, `tabId: string`) instead of the full `Tab` object.
+
+**What changed:**
+- Previously, `setActiveTabId()` in the store updates `lastAccessedAt` via `tabs.map()`, creating new object references for all tabs. This caused ALL `CustomerTabContent` instances to re-render (each running `useSuspenseQuery`, re-rendering `CustomerPage` with all Cloudscape children).
+- Now, `CustomerTabContentInner` is memoized and receives only `customerId` and `tabId` (strings that never change for a given tab). When `activeTabId` changes, `TabPanels` re-renders but `React.memo` skips the content components — only the `style` prop on the wrapper div changes.
+
+**Why:** Without memoization, switching between tabs with 5 open tabs caused ~30 component re-renders (all tabs × all sub-components). With memoization, switching causes 0 content re-renders — only CSS changes.
+
+### 17. Horizontal-only drag constraint for tab reordering
+
+**Files modified:**
+- `src/features/tabs/components/new-tab-bar/tab-item.tsx` — added `RestrictToHorizontalAxis` modifier from `@dnd-kit/abstract/modifiers` to `useSortable` options.
+
+**What changed:**
+- Tab drag-and-drop now restricted to horizontal movement only (like browser tabs). Previously, dragging a tab allowed vertical movement across the entire viewport.
+
+**Why:** Matches browser tab behavior — tabs can only be reordered horizontally within the tab bar.
+
+---
+
+## Architecture Decisions Log (continued)
+
+### ADR-010: Tab Content Rendering via `TabPanels` with `display: none`
+- **Decision:** Tab content is NOT rendered by TanStack Router's `<Outlet>`. Instead, a `<TabPanels>` component renders all open tabs simultaneously, hiding inactive ones with `display: none` / `display: contents`.
+- **Status:** Implemented (Session 4)
+- **Context:** TanStack Router's `<Outlet>` unmounts the old route component and mounts the new one on navigation. For complex pages with heavy Cloudscape components, this causes visible lag. The `display: none` approach keeps all DOM trees alive — switching is a pure CSS change with zero React re-renders (thanks to `React.memo`). This is how browsers handle tabs. Trade-off: tab route components return `null` and serve only as URL matchers + `onEnter` handlers + data prefetchers.
+
+### ADR-011: Bypass TanStack Router for Tab Switching
+- **Decision:** Clicking an already-open tab uses `setActiveTabId()` (Zustand) + `window.history.pushState()` to switch instantly, bypassing TanStack Router's `navigate()`.
+- **Status:** Implemented (Session 4)
+- **Context:** TanStack Router's `navigate()` triggers an async pipeline (route matching → `beforeLoad` → `loader` → render) that introduced lag even with cached data. Since tab content is rendered by `TabPanels` (driven by Zustand, not by the router), the router's pipeline is unnecessary for tab switches. `pushState` updates the URL bar without router involvement. TanStack Router re-syncs on the next "real" navigation (opening a new customer, navigating to a non-tab route).
+
+### ADR-012: Tab Panel Ownership — Each Tab Type Owns Its Rendering
+- **Decision:** `TabPanels` is agnostic to how tab content is rendered. Each tab type provides its own panel component (e.g., `CustomerTabPanel`) which owns its `<Suspense>` boundary, loading fallback, data fetching, and rendering logic.
+- **Status:** Implemented (Session 4)
+- **Context:** Different tab types may or may not need Suspense, may have different loading states, and may fetch data differently. Centralizing this in `TabPanels` would create coupling. Instead, `TabPanels` only handles visibility (`display: none` / `display: contents`) and delegates content to type-specific panel components.
+
+---
+
 ## Next Steps
-- **Phase 2 (remaining):** Tab state restore on app mount (navigate to last active tab on remount)
-- **Phase 3:** Amazon Connect integration layer (@amazon-connect/app SDK)
+- **Phase 4:** Call `initConnectProvider()` at app startup (done) + wire contact events to tab system
+- **Phase 5:** Additional Connect clients as needed (File, Activity, QuickResponses, MessageTemplate, User)
+- **Hash-based sub-navigation:** Reimplement customer sub-sections (contacts, documents, etc.) using URL hash instead of TanStack Router sub-routes

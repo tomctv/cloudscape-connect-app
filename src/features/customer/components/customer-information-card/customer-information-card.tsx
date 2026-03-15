@@ -1,6 +1,5 @@
 import { Tabs } from "@cloudscape-design/components";
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { getRouteApi } from "@tanstack/react-router";
 import { customerQueryOptions } from "../../api/query-options";
 import { ContactInformation } from "./contact-information";
 import { PersonalInformation } from "./personal-information";
@@ -8,10 +7,13 @@ import { ResidenceInformation } from "./residence-information";
 import { EmploymentInformation } from "./employment-information";
 import { ProfileInformation } from "./profile-information";
 
-const routeApi = getRouteApi("/customers/$customerId");
+interface CustomerInformationCardProps {
+  customerId: string;
+}
 
-export const CustomerInformationCard: React.FC = () => {
-  const { customerId } = routeApi.useParams();
+export const CustomerInformationCard: React.FC<CustomerInformationCardProps> = ({
+  customerId,
+}) => {
   const { data: customer } = useSuspenseQuery(customerQueryOptions(customerId));
 
   return (

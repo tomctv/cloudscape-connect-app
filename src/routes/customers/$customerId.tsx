@@ -1,14 +1,8 @@
 import { ApiError } from "@/api/clients/api-client";
-import { LoadingState } from "@/components/loading-state";
 import { customerQueryOptions } from "@/features/customer/api/query-options";
-import { CustomerErrorPage } from "@/features/customer/components/customer-error-page";
-import { CustomerNotFoundPage } from "@/features/customer/components/customer-not-found-page";
-import { CustomerPage } from "@/features/customer/components/customer-page";
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { useTabsStore } from "@/features/tabs";
 import { z } from "zod/v4";
-import { useEffect } from "react";
-import { useSuspenseQuery } from "@tanstack/react-query";
 
 const customerIdSchema = z
   .string()
@@ -53,34 +47,7 @@ export const Route = createFileRoute("/customers/$customerId")({
       icon: "customer-default",
     });
   },
-  component: RouteComponent,
-  pendingComponent: () => (
-    <LoadingState secondaryContent={"Loading customer data"} />
-  ),
-  notFoundComponent: CustomerNotFoundPage,
-  errorComponent: CustomerErrorPage,
+  // Tab content is rendered by TabPanels (always mounted, hidden with CSS).
+  // This route exists for URL matching, onEnter (tab creation), and loader (data prefetch).
+  component: () => null,
 });
-
-function RouteComponent() {
-  const { customerId } = Route.useParams();
-  const { data: customer } = useSuspenseQuery(customerQueryOptions(customerId));
-  const updateTab = useTabsStore((s) => s.updateTab);
-
-  useEffect(() => {
-    const label = [customer?.firstName, customer?.lastName]
-      .filter(Boolean)
-      .join(" ");
-    if (label)
-      updateTab(customerId, {
-        label,
-        icon:
-          customer.status === "client"
-            ? "customer-client"
-            : customer.status === "prospect"
-              ? "customer-prospect"
-              : "customer-default",
-      });
-  }, [customerId, customer, updateTab]);
-
-  return <CustomerPage />;
-}
