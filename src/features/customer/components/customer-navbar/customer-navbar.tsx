@@ -16,6 +16,7 @@ interface CustomerNavbarProps {
   customerId: string;
   notesOpen: boolean;
   onNotesToggle: () => void;
+  onSectionChange: (sectionId: string) => void;
 }
 
 const StyledNavbar = styled.div<{ $verticalOffset: number }>`
@@ -37,12 +38,16 @@ const StyledNavbar = styled.div<{ $verticalOffset: number }>`
 export const CustomerNavbar: React.FC<CustomerNavbarProps> = ({
   customerId,
   onNotesToggle,
+  onSectionChange,
 }) => {
   const { headerHeight } = useLayoutContext();
 
   return (
     <StyledNavbar id="customer-navbar" $verticalOffset={headerHeight ?? 0}>
       <CustomerBreadcrumbs customerId={customerId} />
+
+      <a onClick={() => onSectionChange("contacts")}>Contacts</a>
+
       <ButtonGroup
         variant="icon"
         items={[

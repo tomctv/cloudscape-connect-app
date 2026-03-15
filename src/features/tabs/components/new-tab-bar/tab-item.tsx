@@ -1,9 +1,4 @@
-import {
-  Box,
-  Icon,
-  Spinner,
-  type IconProps,
-} from "@cloudscape-design/components";
+import { Box, Icon, Spinner } from "@cloudscape-design/components";
 import {
   colorBackgroundSegmentDefault,
   colorBorderDividerDefault,
@@ -114,13 +109,9 @@ export const TabItem: React.FC<TabItemProps> = ({ tab, index, isActive }) => {
   });
 
   const getTabIcon = () => {
-    const variant: IconProps.Variant = isActive ? "link" : "subtle";
-
     if (tab.status === "loading") return <Spinner size="normal" />;
-    if (tab.status === "error")
-      return <Icon name="status-warning" variant={variant} />;
-    if (tab.icon)
-      return <Icon svg={TAB_ICON_MAP[tab.icon]} variant={variant} />;
+    if (tab.status === "error") return <Icon name="status-warning" />;
+    if (tab.icon) return <Icon svg={TAB_ICON_MAP[tab.icon]} />;
 
     return null;
   };
@@ -134,7 +125,9 @@ export const TabItem: React.FC<TabItemProps> = ({ tab, index, isActive }) => {
       $isActive={isActive}
     >
       <TabItemContent>
-        {getTabIcon()}
+        <Box color={isActive ? "text-status-info" : "text-status-inactive"}>
+          {getTabIcon()}
+        </Box>
         <TabLabel>
           <Box
             variant="span"

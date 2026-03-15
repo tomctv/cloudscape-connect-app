@@ -22,4 +22,5 @@ export const customerContactsQueryOptions = (
       return CustomerContactsResponseSchema.parse(data);
     },
     enabled: !!customerId,
+    staleTime: 1000 * 60 * 20,
   });

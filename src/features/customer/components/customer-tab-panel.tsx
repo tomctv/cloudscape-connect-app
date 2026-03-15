@@ -19,11 +19,14 @@ const CustomerTabContentInner = memo(
 
     // Update tab label and icon from API data
     useEffect(() => {
+      if (!customer) return;
+
       const label = [customer?.firstName, customer?.lastName]
         .filter(Boolean)
         .join(" ");
       if (label)
         updateTab(tabId, {
+          status: undefined,
           label,
           icon:
             customer.status === "client"

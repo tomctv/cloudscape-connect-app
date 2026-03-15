@@ -3,6 +3,7 @@ import { persist } from "zustand/middleware";
 import {
   type Tab,
   type TabIcon,
+  type TabStatus,
   type TabType,
   TabsPersistedStateSchema,
 } from "../schemas/tab.schema";
@@ -33,6 +34,7 @@ interface TabsActions {
     icon?: TabIcon;
     isPinned?: boolean;
     closable?: boolean;
+    status?: TabStatus;
   }) => string;
 
   /** Close a tab by ID. If the closed tab was active, activates an adjacent tab. */
@@ -51,7 +53,10 @@ interface TabsActions {
   updateTab: (
     id: string,
     updates: Partial<
-      Pick<Tab, "label" | "activePath" | "icon" | "status" | "isPinned" | "closable">
+      Pick<
+        Tab,
+        "label" | "activePath" | "icon" | "status" | "isPinned" | "closable"
+      >
     >,
   ) => void;
 
@@ -77,7 +82,17 @@ export const useTabsStore = create<TabsState & TabsActions>()(
     (set, get) => ({
       ...initialState,
 
-      openTab: ({ id, type, resourceId, label, basePath, icon, isPinned, closable }) => {
+      openTab: ({
+        id,
+        type,
+        resourceId,
+        label,
+        basePath,
+        icon,
+        isPinned,
+        closable,
+        status
+      }) => {
         const { tabs } = get();
         const now = Date.now();
         const existing = tabs.find((tab) => tab.id === id);
@@ -105,6 +120,7 @@ export const useTabsStore = create<TabsState & TabsActions>()(
           closable,
           lastAccessedAt: now,
           createdAt: now,
+          status
         };
 
         set({

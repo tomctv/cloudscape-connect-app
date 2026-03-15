@@ -87,9 +87,9 @@ export const NewTabBar: React.FC = () => {
     const tab = tabs.find((t) => t.id === tabId);
     if (!tab) return;
 
-    // Instant switch: update store (sync) + URL (sync), bypass TanStack Router pipeline
+    // Update store + navigate to the tab's active path.
     setActiveTabId(tabId);
-    window.history.pushState(null, "", tab.activePath);
+    void navigate({ to: tab.activePath });
   };
 
   if (tabs.length === 0) return null;

@@ -1,4 +1,3 @@
-import * as React from "react";
 import { Outlet, createRootRouteWithContext } from "@tanstack/react-router";
 import { AppNavigation } from "@/features/navigation/components/app-navigation";
 import { LayoutProvider } from "@/features/layout/providers/layout-provider";
@@ -16,22 +15,20 @@ export const Route = createRootRouteWithContext<RouterContext>()({
 
 function RootComponent() {
   return (
-    <React.Fragment>
-      <LayoutProvider>
-        <AppNavigation />
-        <AppLayoutToolbar
-          navigationHide
-          toolsHide
-          navigationTriggerHide
-          disableContentPaddings
-          content={
-            <ContentLayout>
-              <TabPanels />
-              <Outlet />
-            </ContentLayout>
-          }
-        />
-      </LayoutProvider>
-    </React.Fragment>
+    <LayoutProvider>
+      <AppNavigation />
+      <AppLayoutToolbar
+        navigationHide
+        toolsHide
+        navigationTriggerHide
+        disableContentPaddings
+        content={
+          <ContentLayout>
+            <TabPanels />
+            <Outlet />
+          </ContentLayout>
+        }
+      />
+    </LayoutProvider>
   );
 }

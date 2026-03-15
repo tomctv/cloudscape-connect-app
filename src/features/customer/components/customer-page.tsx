@@ -1,4 +1,4 @@
-import { Box, SpaceBetween, Tabs } from "@cloudscape-design/components";
+import { Box, SpaceBetween } from "@cloudscape-design/components";
 import { useState, useCallback } from "react";
 import { CustomerNavbar } from "./customer-navbar";
 import { CustomerHeader } from "./customer-header";
@@ -39,6 +39,7 @@ export const CustomerPage: React.FC<CustomerPageProps> = ({
   const handleSectionChange = useCallback(
     (sectionId: string) => {
       const section = sectionId as CustomerSection;
+
       setActiveSection(section);
 
       // Update the URL hash and store's activePath
@@ -60,28 +61,16 @@ export const CustomerPage: React.FC<CustomerPageProps> = ({
             prev === "customer-notes" ? null : "customer-notes",
           )
         }
+        onSectionChange={handleSectionChange}
       />
       <Box padding={{ horizontal: "l", vertical: "s" }}>
         <SpaceBetween size="l">
           <CustomerHeader customerId={customerId} />
-          <Tabs
-            activeTabId={activeSection}
-            onChange={({ detail }) => handleSectionChange(detail.activeTabId)}
-            tabs={[
-              {
-                id: "overview",
-                label: "Overview",
-                content: <CustomerInformationCard customerId={customerId} />,
-              },
-              {
-                id: "contacts",
-                label: "Contact History",
-                content: (
-                  <CustomerContactHistoryPage customerId={customerId} />
-                ),
-              },
-            ]}
-          />
+          <CustomerInformationCard customerId={customerId} />
+
+          {activeSection === "contacts" && (
+            <CustomerContactHistoryPage customerId={customerId} />
+          )}
         </SpaceBetween>
       </Box>
     </div>

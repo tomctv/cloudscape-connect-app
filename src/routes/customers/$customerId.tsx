@@ -1,4 +1,3 @@
-import { ApiError } from "@/api/clients/api-client";
 import { customerQueryOptions } from "@/features/customer/api/query-options";
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { useTabsStore } from "@/features/tabs";
@@ -15,24 +14,10 @@ export const Route = createFileRoute("/customers/$customerId")({
   }),
   beforeLoad: ({ params }) => {
     const result = customerIdSchema.safeParse(params.customerId);
-
     if (!result.success) throw notFound();
   },
-  loader: async ({
-    params: { customerId },
-    context: { queryClient },
-    abortController,
-  }) => {
-    try {
-      await queryClient.ensureQueryData({
-        ...customerQueryOptions(customerId, abortController.signal),
-      });
-    } catch (error) {
-      if (error instanceof ApiError && error.statusCode === 404) {
-        throw notFound();
-      }
-      throw error;
-    }
+  loader: ({ params: { customerId }, context: { queryClient } }) => {
+    queryClient.prefetchQuery(customerQueryOptions(customerId));
   },
   onEnter: (match) => {
     const customerId = match.params.customerId;
@@ -45,6 +30,7 @@ export const Route = createFileRoute("/customers/$customerId")({
       label,
       basePath: match.pathname,
       icon: "customer-default",
+      status: "loading",
     });
   },
   // Tab content is rendered by TabPanels (always mounted, hidden with CSS).
