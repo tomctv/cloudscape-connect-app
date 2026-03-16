@@ -1,4 +1,8 @@
+import { useCallback } from "react";
 import { useLocation, useNavigate } from "@tanstack/react-router";
+import { DragDropProvider } from "@dnd-kit/react";
+import type { DragEndEvent } from "@dnd-kit/react";
+import { isSortable } from "@dnd-kit/dom/sortable";
 import { useTabsStore } from "../../store";
 import { abortTab } from "../../store/tab-abort-controllers";
 import { TabItem } from "./tab-item";
@@ -47,6 +51,22 @@ export const NewTabBar: React.FC = () => {
   const activeTabId = useTabsStore((state) => state.activeTabId);
   const setActiveTabId = useTabsStore((state) => state.setActiveTabId);
   const closeTab = useTabsStore((state) => state.closeTab);
+  const reorderTabs = useTabsStore((state) => state.reorderTabs);
+
+  // Persist the new tab order after a drag operation
+  const handleDragEnd = useCallback(
+    (event: Parameters<DragEndEvent>[0]) => {
+      const { source } = event.operation;
+      if (!source || !isSortable(source)) return;
+      if (source.sortable.initialIndex === source.sortable.index) return;
+
+      const ids = tabs.map((t) => t.id);
+      const [moved] = ids.splice(source.sortable.initialIndex, 1);
+      ids.splice(source.sortable.index, 0, moved);
+      reorderTabs(ids);
+    },
+    [tabs, reorderTabs],
+  );
 
   // A tab is visually active only when the current URL matches a tab route
   const visuallyActiveTabId = tabs.some((tab) =>
@@ -104,16 +124,18 @@ export const NewTabBar: React.FC = () => {
   if (tabs.length === 0) return null;
 
   return (
-    <TabsList onClickCapture={handleClick}>
-      {tabs.map((tab, index) => (
-        <TabItem
-          key={tab.id}
-          tab={tab}
-          index={index}
-          isActive={tab.id === visuallyActiveTabId}
-        />
-      ))}
-      <li />
-    </TabsList>
+    <DragDropProvider onDragEnd={handleDragEnd}>
+      <TabsList onClickCapture={handleClick}>
+        {tabs.map((tab, index) => (
+          <TabItem
+            key={tab.id}
+            tab={tab}
+            index={index}
+            isActive={tab.id === visuallyActiveTabId}
+          />
+        ))}
+        <li />
+      </TabsList>
+    </DragDropProvider>
   );
 };
