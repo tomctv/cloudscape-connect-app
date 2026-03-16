@@ -110,7 +110,9 @@ export const TabItem: React.FC<TabItemProps> = ({ tab, index, isActive }) => {
 
   const getTabIcon = () => {
     if (tab.status === "loading") return <Spinner size="normal" />;
-    if (tab.status === "error") return <Icon name="status-warning" />;
+    if (tab.status === "error" || tab.status === "not-found-error") {
+      return <Icon name="status-warning" />;
+    }
     if (tab.icon) return <Icon svg={TAB_ICON_MAP[tab.icon]} />;
 
     return null;

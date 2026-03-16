@@ -1,5 +1,6 @@
 import { useLocation, useNavigate } from "@tanstack/react-router";
 import { useTabsStore } from "../../store";
+import { abortTab } from "../../store/tab-abort-controllers";
 import { TabItem } from "./tab-item";
 import styled from "styled-components";
 import {
@@ -65,6 +66,14 @@ export const NewTabBar: React.FC = () => {
       if (!tabId) return;
 
       const closedTab = tabs.find((t) => t.id === tabId);
+
+      // Abort all in-flight HTTP requests for this tab's resource.
+      // Uses a per-tab AbortController (not React Query's internal signal)
+      // so requests are only canceled on explicit tab close, never on React remounts.
+      if (closedTab?.resourceId) {
+        abortTab(closedTab.resourceId);
+      }
+
       closeTab(tabId);
 
       // Redirect only if the user is currently viewing the closed tab

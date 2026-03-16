@@ -9,14 +9,18 @@ import {
   Icon,
   SpaceBetween,
 } from "@cloudscape-design/components";
-import { useRouter, type ErrorComponentProps } from "@tanstack/react-router";
+import { useNavigate } from "@tanstack/react-router";
 
-export const CustomerErrorPage: React.FC<ErrorComponentProps> = ({ error }) => {
-  const router = useRouter();
+interface CustomerErrorPageProps {
+  error: Error;
+  onRetry: () => void;
+}
 
-  const handleRetry = async () => {
-    router.invalidate();
-  };
+export const CustomerErrorPage: React.FC<CustomerErrorPageProps> = ({
+  error,
+  onRetry,
+}) => {
+  const navigate = useNavigate();
 
   return (
     <ContentLayout
@@ -74,7 +78,7 @@ export const CustomerErrorPage: React.FC<ErrorComponentProps> = ({ error }) => {
                 <Button
                   variant="primary"
                   iconName="refresh"
-                  onClick={handleRetry}
+                  onClick={onRetry}
                 >
                   Retry
                 </Button>
@@ -82,7 +86,7 @@ export const CustomerErrorPage: React.FC<ErrorComponentProps> = ({ error }) => {
                   href="/"
                   onFollow={(event) => {
                     event.preventDefault();
-                    router.navigate({ to: "/", replace: true });
+                    navigate({ to: "/", replace: true });
                   }}
                 >
                   Go to Home

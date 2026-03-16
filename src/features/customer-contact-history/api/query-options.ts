@@ -1,6 +1,7 @@
 import apiClient from "@/api/clients/api-client";
 import { queryOptions } from "@tanstack/react-query";
 import { CustomerContactsResponseSchema } from "../schemas/customer-contact.schema";
+import { getTabSignal } from "@/features/tabs/store/tab-abort-controllers";
 
 interface CustomerContactsParams {
   customerId: string;
@@ -8,16 +9,17 @@ interface CustomerContactsParams {
   endDate?: string;
 }
 
-export const customerContactsQueryOptions = (
-  { customerId, startDate, endDate }: CustomerContactsParams,
-  signal?: AbortSignal,
-) =>
+export const customerContactsQueryOptions = ({
+  customerId,
+  startDate,
+  endDate,
+}: CustomerContactsParams) =>
   queryOptions({
     queryKey: ["customers", customerId, "contacts", { startDate, endDate }],
-    queryFn: async ({ signal: querySignal }) => {
+    queryFn: async () => {
       const data = await apiClient.get(`/customers/${customerId}/contacts`, {
         params: !!startDate && !!endDate ? { startDate, endDate } : undefined,
-        signal: signal ?? querySignal,
+        signal: getTabSignal(customerId),
       });
       return CustomerContactsResponseSchema.parse(data);
     },
