@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, useEffect } from "react";
 import { useLocation, useNavigate } from "@tanstack/react-router";
 import { DragDropProvider } from "@dnd-kit/react";
 import type { DragEndEvent } from "@dnd-kit/react";
@@ -52,6 +52,29 @@ export const NewTabBar: React.FC = () => {
   const setActiveTabId = useTabsStore((state) => state.setActiveTabId);
   const closeTab = useTabsStore((state) => state.closeTab);
   const reorderTabs = useTabsStore((state) => state.reorderTabs);
+  const updateTab = useTabsStore((state) => state.updateTab);
+
+  // Sync activePath: when the user navigates within a tab's scope,
+  // update that tab's activePath so clicking the tab later restores the sub-route.
+  // Only updates the ACTIVE tab to avoid overwriting persisted activePaths of
+  // inactive tabs (whose state comes from localStorage, not the browser URL).
+  useEffect(() => {
+    if (!activeTabId) return;
+
+    const activeTab = tabs.find((t) => t.id === activeTabId);
+    if (!activeTab) return;
+
+    // Only sync if the current URL belongs to the active tab
+    if (!location.pathname.startsWith(activeTab.basePath)) return;
+
+    const maskedLocation = (location as unknown as Record<string, unknown>)
+      .maskedLocation as typeof location | undefined;
+    const effectiveHref = maskedLocation?.href ?? location.href;
+
+    if (activeTab.activePath !== effectiveHref) {
+      updateTab(activeTab.id, { activePath: effectiveHref });
+    }
+  }, [location, activeTabId, tabs, updateTab]);
 
   // Persist the new tab order after a drag operation
   const handleDragEnd = useCallback(

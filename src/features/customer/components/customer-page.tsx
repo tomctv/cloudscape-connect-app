@@ -1,5 +1,5 @@
 import { Box, SpaceBetween } from "@cloudscape-design/components";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { CustomerNavbar } from "./customer-navbar";
 import { CustomerHeader } from "./customer-header";
 import { CustomerInformationCard } from "./customer-information-card";
@@ -12,11 +12,13 @@ type CustomerSection = "overview" | "contacts";
 const VALID_SECTIONS: CustomerSection[] = ["overview", "contacts"];
 
 /**
- * Parses the current URL hash into a valid customer section.
+ * Extracts the section from a path's hash fragment.
  * Returns "overview" if the hash is empty or invalid.
  */
-function parseHashSection(): CustomerSection {
-  const hash = window.location.hash.slice(1); // Remove leading #
+function parseSectionFromPath(path: string): CustomerSection {
+  const hashIndex = path.indexOf("#");
+  if (hashIndex === -1) return "overview";
+  const hash = path.slice(hashIndex + 1);
   return VALID_SECTIONS.includes(hash as CustomerSection)
     ? (hash as CustomerSection)
     : "overview";
@@ -32,9 +34,20 @@ export const CustomerPage: React.FC<CustomerPageProps> = ({
   tabId,
 }) => {
   const [activeDrawerId, setActiveDrawerId] = useState<string | null>(null);
-  const [activeSection, setActiveSection] =
-    useState<CustomerSection>(parseHashSection);
+  const activePath = useTabsStore(
+    (s) => s.tabs.find((t) => t.id === tabId)?.activePath ?? "",
+  );
+  const [activeSection, setActiveSection] = useState<CustomerSection>(() =>
+    parseSectionFromPath(activePath),
+  );
   const updateTab = useTabsStore((s) => s.updateTab);
+
+  // Keep activeSection in sync when activePath changes externally
+  // (e.g., the tab-bar sync effect updates it from the browser URL)
+  useEffect(() => {
+    const section = parseSectionFromPath(activePath);
+    setActiveSection((prev) => (prev !== section ? section : prev));
+  }, [activePath]);
 
   const handleSectionChange = useCallback(
     (sectionId: string) => {
