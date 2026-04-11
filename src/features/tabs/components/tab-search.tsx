@@ -34,7 +34,7 @@ export const TabSearch: React.FC<TabSearchProps> = ({ query, setQuery }) => {
   };
 
   const handleBlurCapture = (
-    event: React.FocusEvent<HTMLInputElement, Element>
+    event: React.FocusEvent<HTMLInputElement, Element>,
   ) => {
     const relatedTarget = event.relatedTarget;
 
@@ -64,24 +64,26 @@ export const TabSearch: React.FC<TabSearchProps> = ({ query, setQuery }) => {
         </StyledBox>
       )}
       {active && (
-        <Input
-          onChange={({ detail }) => setQuery(detail.value)}
-          value={query}
-          placeholder="Search tabs"
-          type="search"
-          style={{
-            root: {
-              borderColor: {
-                default: "transparent",
+        <div style={{ paddingRight: "4px" }}>
+          <Input
+            onChange={({ detail }) => setQuery(detail.value)}
+            value={query}
+            placeholder="Search tabs"
+            type="search"
+            style={{
+              root: {
+                borderColor: {
+                  default: "transparent",
+                },
               },
-            },
-          }}
-          onKeyDown={handleKeyDown}
-          autoFocus
-          nativeInputAttributes={{
-            onBlurCapture: handleBlurCapture,
-          }}
-        />
+            }}
+            onKeyDown={handleKeyDown}
+            autoFocus
+            nativeInputAttributes={{
+              onBlurCapture: handleBlurCapture,
+            }}
+          />
+        </div>
       )}
     </TabSearchContainer>
   );

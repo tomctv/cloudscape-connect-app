@@ -1,10 +1,9 @@
 import { TopNavigation } from "@cloudscape-design/components";
 import { LogOutIcon, CalendarsIcon, UsersIcon } from "lucide-react";
-// import { TabBar } from "@/features/tabs";
+import { TabBar } from "@/features/tabs";
 import type { BaseNavigationDetail } from "node_modules/@cloudscape-design/components/internal/events";
 import { useNavigate } from "@tanstack/react-router";
 import styled from "styled-components";
-import { NewTabBar } from "@/features/tabs/components/new-tab-bar/new-tab-bar";
 
 const StyledTopNavigation = styled(TopNavigation)`
   [class*="awsui_padding-box"] {
@@ -131,8 +130,7 @@ export const AppNavigation: React.FC = () => {
           },
         ]}
       />
-      {/* <TabBar /> */}
-      <NewTabBar />
+      <TabBar />
     </div>
   );
 };

@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useLocation, useNavigate } from "@tanstack/react-router";
 import { DragDropProvider } from "@dnd-kit/react";
 import type { DragEndEvent } from "@dnd-kit/react";
@@ -6,27 +6,18 @@ import { isSortable } from "@dnd-kit/dom/sortable";
 import { useTabsStore } from "../../store";
 import { abortTab } from "../../store/tab-abort-controllers";
 import { TabItem } from "./tab-item";
-import styled from "styled-components";
+import { Icon } from "@cloudscape-design/components";
 import {
-  colorBackgroundContainerContent,
-  colorBorderDividerDefault,
-} from "@cloudscape-design/design-tokens";
+  TabBarWrapper,
+  ScrollArea,
+  ScrollNavLeft,
+  ScrollNavRight,
+  TabsList,
+  NoMatchItem,
+} from "./tab-bar-styles";
+import { useTabScroll } from "../../hooks/use-tab-scroll";
+import { TabSearch } from "../tab-search";
 import type React from "react";
-
-const TabsList = styled.ul`
-  background-color: ${colorBackgroundContainerContent};
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  align-items: end;
-  padding-top: 4px;
-
-  li:last-child {
-    border-bottom: 1px solid ${colorBorderDividerDefault};
-    flex-grow: 1;
-  }
-`;
 
 /**
  * Walks up the DOM from the event target to find the closest element
@@ -44,7 +35,7 @@ function findTabId(
   return null;
 }
 
-export const NewTabBar: React.FC = () => {
+export const TabBar: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const tabs = useTabsStore((state) => state.tabs);
@@ -53,6 +44,16 @@ export const NewTabBar: React.FC = () => {
   const closeTab = useTabsStore((state) => state.closeTab);
   const reorderTabs = useTabsStore((state) => state.reorderTabs);
   const updateTab = useTabsStore((state) => state.updateTab);
+
+  const [searchQuery, setSearchQuery] = useState("");
+  const visibleTabs = searchQuery
+    ? tabs.filter((t) =>
+        t.label.toLowerCase().includes(searchQuery.toLowerCase()),
+      )
+    : tabs;
+
+  const { scrollRef, canScrollLeft, canScrollRight, scrollLeft, scrollRight } =
+    useTabScroll(visibleTabs, activeTabId);
 
   // Sync activePath: when the user navigates within a tab's scope,
   // update that tab's activePath so clicking the tab later restores the sub-route.
@@ -147,18 +148,47 @@ export const NewTabBar: React.FC = () => {
   if (tabs.length === 0) return null;
 
   return (
-    <DragDropProvider onDragEnd={handleDragEnd}>
-      <TabsList onClickCapture={handleClick}>
-        {tabs.map((tab, index) => (
-          <TabItem
-            key={tab.id}
-            tab={tab}
-            index={index}
-            isActive={tab.id === visuallyActiveTabId}
-          />
-        ))}
-        <li />
-      </TabsList>
-    </DragDropProvider>
+    <TabBarWrapper>
+      <TabSearch query={searchQuery} setQuery={setSearchQuery} />
+      {visibleTabs.length === 0 ? (
+        <NoMatchItem>No matches</NoMatchItem>
+      ) : (
+        <>
+          {(canScrollLeft || canScrollRight) && (
+            <ScrollNavLeft
+              onClick={scrollLeft}
+              disabled={!canScrollLeft}
+              aria-label="Scroll tabs left"
+            >
+              <Icon name="angle-left" />
+            </ScrollNavLeft>
+          )}
+          <ScrollArea ref={scrollRef}>
+            <DragDropProvider onDragEnd={handleDragEnd}>
+              <TabsList onClickCapture={handleClick}>
+                {visibleTabs.map((tab, index) => (
+                  <TabItem
+                    key={tab.id}
+                    tab={tab}
+                    index={index}
+                    isActive={tab.id === visuallyActiveTabId}
+                  />
+                ))}
+                <li />
+              </TabsList>
+            </DragDropProvider>
+          </ScrollArea>
+          {(canScrollLeft || canScrollRight) && (
+            <ScrollNavRight
+              onClick={scrollRight}
+              disabled={!canScrollRight}
+              aria-label="Scroll tabs right"
+            >
+              <Icon name="angle-right" />
+            </ScrollNavRight>
+          )}
+        </>
+      )}
+    </TabBarWrapper>
   );
 };
