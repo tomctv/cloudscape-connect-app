@@ -3,13 +3,15 @@ import {
   colorBorderDividerDefault,
   colorBorderDividerSecondary,
   spaceScaledXs,
+  colorTextBodyDefault,
 } from "@cloudscape-design/design-tokens";
-import { useRef, useState } from "react";
 import styled from "styled-components";
 
 interface TabSearchProps {
+  active: boolean;
+  onToggle: (value: boolean) => void;
   query: string;
-  setQuery: (value: string) => void;
+  onChange: (value: string) => void;
 }
 
 const TabSearchContainer = styled.div`
@@ -25,48 +27,35 @@ const StyledBox = styled(Box)`
   border-right: 1px solid ${colorBorderDividerSecondary};
 `;
 
-export const TabSearch: React.FC<TabSearchProps> = ({ query, setQuery }) => {
-  const [active, setActive] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  const handleActivate = () => {
-    setActive(true);
-  };
-
-  const handleBlurCapture = (
-    event: React.FocusEvent<HTMLInputElement, Element>,
-  ) => {
-    const relatedTarget = event.relatedTarget;
-
-    if (containerRef.current && !containerRef.current.contains(relatedTarget)) {
-      setActive(false);
-      setQuery("");
-    }
-  };
-
+export const TabSearch: React.FC<TabSearchProps> = ({
+  active,
+  onToggle,
+  query,
+  onChange,
+}) => {
   const handleKeyDown = (event: CustomEvent<{ key: string }>) => {
     if (event.detail.key === "Escape") {
-      setActive(false);
-      setQuery("");
+      onToggle(false);
+      onChange("");
     }
   };
 
   return (
-    <TabSearchContainer ref={containerRef}>
+    <TabSearchContainer>
       {!active && (
         <StyledBox padding={{ horizontal: "xxs" }}>
           <Button
             variant="icon"
             iconName="search"
             ariaLabel="Tab search"
-            onClick={handleActivate}
+            onClick={() => onToggle(true)}
           />
         </StyledBox>
       )}
       {active && (
         <div style={{ paddingRight: "4px" }}>
           <Input
-            onChange={({ detail }) => setQuery(detail.value)}
+            onChange={({ detail }) => onChange(detail.value)}
             value={query}
             placeholder="Search tabs"
             type="search"
@@ -75,13 +64,13 @@ export const TabSearch: React.FC<TabSearchProps> = ({ query, setQuery }) => {
                 borderColor: {
                   default: "transparent",
                 },
+                color: {
+                  hover: colorTextBodyDefault,
+                },
               },
             }}
             onKeyDown={handleKeyDown}
             autoFocus
-            nativeInputAttributes={{
-              onBlurCapture: handleBlurCapture,
-            }}
           />
         </div>
       )}

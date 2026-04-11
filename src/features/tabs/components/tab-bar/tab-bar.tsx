@@ -45,6 +45,7 @@ export const TabBar: React.FC = () => {
   const reorderTabs = useTabsStore((state) => state.reorderTabs);
   const updateTab = useTabsStore((state) => state.updateTab);
 
+  const [searchActive, setSearchActive] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const visibleTabs = searchQuery
     ? tabs.filter((t) =>
@@ -76,6 +77,22 @@ export const TabBar: React.FC = () => {
       updateTab(activeTab.id, { activePath: effectiveHref });
     }
   }, [location, activeTabId, tabs, updateTab]);
+
+  const resetTabSearch = () => {
+    setSearchActive(false);
+    setSearchQuery("");
+  };
+
+  // Reset search when focus leaves the entire tab bar (e.g. user clicks in the page).
+  // relatedTarget is the element receiving focus: if it's still inside TabBarWrapper,
+  // the user is interacting within the bar (clicking a tab, scroll button, etc.) and
+  // we leave the search open. StyledListItem has tabIndex={-1} to ensure tab clicks
+  // produce a non-null relatedTarget pointing inside the bar.
+  const handleTabBarBlur = (event: React.FocusEvent<HTMLDivElement>) => {
+    if (!event.currentTarget.contains(event.relatedTarget)) {
+      resetTabSearch();
+    }
+  };
 
   // Persist the new tab order after a drag operation
   const handleDragEnd = useCallback(
@@ -143,13 +160,21 @@ export const TabBar: React.FC = () => {
     // Update store + navigate to the tab's active path.
     setActiveTabId(tabId);
     void navigate({ to: tab.activePath });
+
+    // Reset tab search state to hide search input
+    resetTabSearch();
   };
 
   if (tabs.length === 0) return null;
 
   return (
-    <TabBarWrapper>
-      <TabSearch query={searchQuery} setQuery={setSearchQuery} />
+    <TabBarWrapper onBlur={handleTabBarBlur}>
+      <TabSearch
+        active={searchActive}
+        onToggle={(value) => setSearchActive(value)}
+        query={searchQuery}
+        onChange={setSearchQuery}
+      />
       {visibleTabs.length === 0 ? (
         <NoMatchItem>No matches</NoMatchItem>
       ) : (

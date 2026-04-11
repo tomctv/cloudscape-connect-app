@@ -125,6 +125,7 @@ export const TabItem: React.FC<TabItemProps> = ({ tab, index, isActive }) => {
       aria-label={tab.label}
       title={tab.label}
       $isActive={isActive}
+      tabIndex={-1}
     >
       <TabItemContent>
         <Box color={isActive ? "text-status-info" : "text-status-inactive"}>
