@@ -6,9 +6,9 @@ import {
   Icon,
   SpaceBetween,
 } from "@cloudscape-design/components";
-import { useNavigate, type NotFoundRouteProps } from "@tanstack/react-router";
+import { useNavigate } from "@tanstack/react-router";
 
-export const CustomerNotFoundPage: React.FC<NotFoundRouteProps> = () => {
+export const CustomerNotFoundPage: React.FC = () => {
   const navigate = useNavigate();
 
   return (
@@ -42,6 +42,8 @@ export const CustomerNotFoundPage: React.FC<NotFoundRouteProps> = () => {
               >
                 The customer you're looking for doesn't exist or may have been
                 removed.
+                <br />
+                This tab will be closed automatically when you navigate away.
               </Box>
               <SpaceBetween direction="horizontal" size="xs">
                 <Button

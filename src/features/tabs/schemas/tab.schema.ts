@@ -25,14 +25,19 @@ export type TabIcon = z.infer<typeof TabIconSchema>;
 
 /**
  * Tab status indicators for visual feedback in the tab bar.
+ * - "idle": data loaded successfully, default state
+ * - "loading": tab data is being fetched
  * - "active-contact": customer is currently on a call/chat/email
- * - "error": tab data failed to load or resource is unavailable
+ * - "error": tab data failed to load (retriable server errors)
+ * - "not-found-error": resource does not exist (404, not retriable, auto-closed on leave)
  * - "unsaved-changes": tab has pending unsaved modifications
  */
 export const TabStatusSchema = z.enum([
+  "idle",
   "loading",
   "active-contact",
   "error",
+  "not-found-error",
   "unsaved-changes",
 ]);
 

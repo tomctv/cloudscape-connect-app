@@ -46,6 +46,12 @@ function createAxiosInstance(): AxiosInstance {
   instance.interceptors.response.use(
     (response: AxiosResponse) => response,
     (error: AxiosError) => {
+      // Canceled requests are expected behavior (e.g., tab closed, navigation changed).
+      // Silently propagate without logging.
+      if (axios.isCancel(error)) {
+        throw new ApiError("Request was canceled", undefined, error);
+      }
+
       const statusCode = error.response?.status;
       const errorMessage = error.message;
 

@@ -1,6 +1,9 @@
 .lucide,
 .lucide>path,
+.lucide>line,
+.lucide>polyline,
+.lucide>rect,
 .lucide>circle,
-.lucide>rect {
+.lucide>ellipse {
   stroke-width: 3px !important;
 }

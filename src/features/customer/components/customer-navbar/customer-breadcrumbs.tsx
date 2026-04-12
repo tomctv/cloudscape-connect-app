@@ -1,13 +1,15 @@
 import { BreadcrumbGroup } from "@cloudscape-design/components";
-import { getRouteApi } from "@tanstack/react-router";
 import { customerQueryOptions } from "../../api/query-options";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
 
-const routeApi = getRouteApi("/customers/$customerId");
+interface CustomerBreadcrumbsProps {
+  customerId: string;
+}
 
-export const CustomerBreadcrumbs: React.FC = () => {
-  const { customerId } = routeApi.useParams();
+export const CustomerBreadcrumbs: React.FC<CustomerBreadcrumbsProps> = ({
+  customerId,
+}) => {
   const { data: customer } = useSuspenseQuery(customerQueryOptions(customerId));
 
   const customerHomeText = useMemo<string>(() => {

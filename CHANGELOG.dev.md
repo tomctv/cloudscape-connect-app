@@ -240,6 +240,256 @@ Each entry includes what changed, why, and which files were affected — useful 
 
 ---
 
+## [2026-03-12] Session 3 — Phase 3: Amazon Connect Integration Layer
+
+### 13. Amazon Connect SDK integration — provider init + client singletons
+
+**Files created:**
+- `src/features/amazon-connect/provider/connect-provider.ts` — `initConnectProvider()` (async, detects iframe, applies theme) + `getConnectProvider()` singleton getter
+- `src/features/amazon-connect/provider/index.ts` — barrel export
+- `src/features/amazon-connect/clients/agent-client.ts` — lazy singleton `getAgentClient()` from `@amazon-connect/contact`
+- `src/features/amazon-connect/clients/contact-client.ts` — lazy singleton `getContactClient()` from `@amazon-connect/contact`
+- `src/features/amazon-connect/clients/voice-client.ts` — lazy singleton `getVoiceClient()` from `@amazon-connect/voice`
+- `src/features/amazon-connect/clients/email-client.ts` — lazy singleton `getEmailClient()` from `@amazon-connect/email`
+- `src/features/amazon-connect/clients/index.ts` — barrel export
+- `src/features/amazon-connect/index.ts` — public API barrel
+
+**Files modified:**
+- `src/main.tsx` — calls `await initConnectProvider()` at startup before rendering
+
+**What changed:**
+- `initConnectProvider()` detects if running inside Agent Workspace iframe (`window.self !== window.top`). In local dev (not in iframe), returns `null` and logs a warning — no SDK timeout errors.
+- After `AmazonConnectApp.init()`, applies the Agent Workspace theme via `await applyConnectTheme(provider)` from `@amazon-connect/theme`.
+- Each client follows the same lazy singleton pattern: on first call, creates the client with the provider; on subsequent calls, returns the cached instance. Returns `null` if provider unavailable (local dev).
+
+**Why:** Phase 3 establishes the integration layer without wiring events yet. All Amazon Connect SDK access goes through these getters, making it easy to mock for local dev in the future.
+
+---
+
+## [2026-03-15] Session 4 — Browser-Like Tab Navigation (Instant Tab Switching)
+
+### 14. Browser-like tab switching with `display: none` / `display: contents`
+
+**Files created:**
+- `src/features/tabs/components/tab-panels.tsx` — `TabPanels` component: renders ALL open tab panels simultaneously, hides inactive ones with `display: none`, shows active one with `display: contents`. Determines visibility from Zustand `activeTabId` + `isTabRoute` check.
+- `src/features/customer/components/customer-tab-panel.tsx` — `CustomerTabPanel` wrapping customer-specific content with its own `<Suspense>` boundary and loading fallback. Contains `CustomerTabContentInner` (memoized with `React.memo`) for data fetching and tab label/icon sync.
+
+**Files modified:**
+- `src/routes/__root.tsx` — added `<TabPanels />` alongside `<Outlet />` in the root layout
+- `src/routes/customers/$customerId.tsx` — route component changed to `() => null`. Route still provides `onEnter` (tab creation), `beforeLoad` (validation), `loader` (data prefetch), `validateSearch`. Content rendering delegated to `TabPanels`.
+- `src/features/customer/components/customer-page.tsx` — accepts `customerId` as prop (no longer reads from route). Removed `<Outlet />` (no sub-routes).
+- `src/features/customer/components/customer-header/customer-header.tsx` — accepts `customerId` as prop, removed `getRouteApi`, removed contacts link
+- `src/features/customer/components/customer-navbar/customer-navbar.tsx` — accepts `customerId` as prop, passes to `CustomerBreadcrumbs`
+- `src/features/customer/components/customer-navbar/customer-breadcrumbs.tsx` — accepts `customerId` as prop, removed `getRouteApi`
+- `src/features/customer/components/customer-information-card/customer-information-card.tsx` — accepts `customerId` as prop, removed `getRouteApi`
+
+**Files deleted:**
+- `src/routes/customers/$customerId.contacts.tsx` — contacts sub-route removed (will be reimplemented as hash-based sub-navigation)
+
+**Architecture:**
+
+Two separate rendering mechanisms now coexist:
+1. **`<TabPanels />`** — renders tab content. Panels are always mounted, hidden with CSS. Switching is instant (no mount/unmount, no re-render, just CSS change).
+2. **`<Outlet />`** — renders non-tab routes (`/customers/search`, `/settings`, etc.) normally via TanStack Router.
+
+Tab route components return `null` — their purpose is URL matching, `onEnter` for tab creation, and `loader` for data prefetch. The actual content is rendered by `TabPanels`.
+
+**Why:** Switching between tabs caused visible lag because TanStack Router unmounts the old route component and mounts the new one. With complex Cloudscape components (AppLayoutToolbar, ContentLayout, Tabs with 5 sub-tabs), this mount/unmount cycle was slow. The `display: none` approach keeps all tab DOM trees alive in memory — switching is a pure CSS change, identical to how browsers handle tabs.
+
+### 15. Instant tab switch: bypass TanStack Router navigation on tab click
+
+**Files modified:**
+- `src/features/tabs/components/new-tab-bar/new-tab-bar.tsx` — tab click handler replaced `navigate({ to: tab.activePath })` with `window.history.pushState(null, "", tab.activePath)`. `setActiveTabId()` (Zustand, sync) handles the visual switch; `pushState` updates the browser URL without triggering TanStack Router's async pipeline.
+
+**What changed:**
+- Clicking an already-open tab no longer goes through TanStack Router's `navigate()` (which runs route matching → `beforeLoad` → `loader` → render).
+- Instead: `setActiveTabId()` updates Zustand immediately (sync) → `TabPanels` re-renders → CSS switches the visible panel. URL updated via `pushState` (instant, no router involvement).
+- TanStack Router is unaware of the URL change (`pushState` doesn't trigger `popstate`), but this doesn't matter: tab content is driven by Zustand, not by the router. The next "real" TanStack Router navigation (opening a new customer, navigating to a non-tab route) re-syncs the router with the actual URL.
+
+**Why:** Even with the `display: none` approach, `navigate()` introduced lag because TanStack Router's navigation pipeline is async. Bypassing it makes the switch truly instantaneous.
+
+### 16. Performance: memoized tab panel content to prevent cascading re-renders
+
+**Files modified:**
+- `src/features/customer/components/customer-tab-panel.tsx` — `CustomerTabContentInner` wrapped with `React.memo`, receives only stable primitive props (`customerId: string`, `tabId: string`) instead of the full `Tab` object.
+
+**What changed:**
+- Previously, `setActiveTabId()` in the store updates `lastAccessedAt` via `tabs.map()`, creating new object references for all tabs. This caused ALL `CustomerTabContent` instances to re-render (each running `useSuspenseQuery`, re-rendering `CustomerPage` with all Cloudscape children).
+- Now, `CustomerTabContentInner` is memoized and receives only `customerId` and `tabId` (strings that never change for a given tab). When `activeTabId` changes, `TabPanels` re-renders but `React.memo` skips the content components — only the `style` prop on the wrapper div changes.
+
+**Why:** Without memoization, switching between tabs with 5 open tabs caused ~30 component re-renders (all tabs × all sub-components). With memoization, switching causes 0 content re-renders — only CSS changes.
+
+### 17. Horizontal-only drag constraint for tab reordering
+
+**Files modified:**
+- `src/features/tabs/components/new-tab-bar/tab-item.tsx` — added `RestrictToHorizontalAxis` modifier from `@dnd-kit/abstract/modifiers` to `useSortable` options.
+
+**What changed:**
+- Tab drag-and-drop now restricted to horizontal movement only (like browser tabs). Previously, dragging a tab allowed vertical movement across the entire viewport.
+
+**Why:** Matches browser tab behavior — tabs can only be reordered horizontally within the tab bar.
+
+---
+
+## Architecture Decisions Log (continued)
+
+### ADR-010: Tab Content Rendering via `TabPanels` with `display: none`
+- **Decision:** Tab content is NOT rendered by TanStack Router's `<Outlet>`. Instead, a `<TabPanels>` component renders all open tabs simultaneously, hiding inactive ones with `display: none` / `display: contents`.
+- **Status:** Implemented (Session 4)
+- **Context:** TanStack Router's `<Outlet>` unmounts the old route component and mounts the new one on navigation. For complex pages with heavy Cloudscape components, this causes visible lag. The `display: none` approach keeps all DOM trees alive — switching is a pure CSS change with zero React re-renders (thanks to `React.memo`). This is how browsers handle tabs. Trade-off: tab route components return `null` and serve only as URL matchers + `onEnter` handlers + data prefetchers.
+
+### ADR-011: Bypass TanStack Router for Tab Switching
+- **Decision:** Clicking an already-open tab uses `setActiveTabId()` (Zustand) + `window.history.pushState()` to switch instantly, bypassing TanStack Router's `navigate()`.
+- **Status:** Implemented (Session 4)
+- **Context:** TanStack Router's `navigate()` triggers an async pipeline (route matching → `beforeLoad` → `loader` → render) that introduced lag even with cached data. Since tab content is rendered by `TabPanels` (driven by Zustand, not by the router), the router's pipeline is unnecessary for tab switches. `pushState` updates the URL bar without router involvement. TanStack Router re-syncs on the next "real" navigation (opening a new customer, navigating to a non-tab route).
+
+### ADR-012: Tab Panel Ownership — Each Tab Type Owns Its Rendering
+- **Decision:** `TabPanels` is agnostic to how tab content is rendered. Each tab type provides its own panel component (e.g., `CustomerTabPanel`) which owns its `<Suspense>` boundary, loading fallback, data fetching, and rendering logic.
+- **Status:** Implemented (Session 4)
+- **Context:** Different tab types may or may not need Suspense, may have different loading states, and may fetch data differently. Centralizing this in `TabPanels` would create coupling. Instead, `TabPanels` only handles visibility (`display: none` / `display: contents`) and delegates content to type-specific panel components.
+
+---
+
+## [2026-03-20] Session 5 — Bug Fixes: Double Fetch, Flash, Error Handling, Tab Status
+
+### 18. Fixed visual flash on tab switch: `visibility: hidden` + Zustand-only visibility
+
+**Files modified:**
+- `src/features/tabs/components/tab-panels.tsx` — replaced `display: none` with `visibility: hidden; position: absolute; overflow: hidden; height: 0; pointer-events: none` for inactive panels. Removed dependency on `useLocation()` — visibility now driven purely by Zustand `activeTabId`.
+
+**Why:** `display: none` caused a flash when switching tabs because it fully unmounts/remounts the DOM subtree in some cases, and the re-paint was visible. `visibility: hidden` keeps the element in the render tree and layout, so the browser retains all rendering state — switching is a single CSS property change. Removing `useLocation()` eliminated re-renders triggered by router state changes unrelated to tab visibility.
+
+### 19. Per-tab AbortController system for request cancellation
+
+**Files created:**
+- `src/features/tabs/store/tab-abort-controllers.ts` — module-level `Map<string, AbortController>` keyed by `resourceId`. Exports `getTabSignal(resourceId)` (creates or reuses a controller) and `abortTab(resourceId)` (aborts and deletes the controller).
+
+**Files modified:**
+- `src/features/tabs/components/tab-bar/new-tab-bar.tsx` (later renamed) — replaced `queryClient.cancelQueries()` with `abortTab(closedTab.resourceId)` on tab close.
+- `src/features/customer/api/query-options.ts` — replaced React Query's `querySignal` with `getTabSignal(customerId)` in `queryFn`.
+- `src/features/customer-contact-history/api/query-options.ts` — same pattern.
+
+**Why:** React Query's `querySignal` gets aborted on component unmount/remount cycles, causing spurious request cancellations during React's own lifecycle (double-fetch on initial navigation). Decoupling with a custom `AbortController` per tab ensures requests are only cancelled on explicit tab close — never by React lifecycle events. `cancelQueries` without a signal in the `queryFn` had no HTTP-level effect.
+
+### 20. Fixed double fetch on refresh (multiple tabs open)
+
+**What changed:**
+- Root cause: TanStack Router remounts the root component once during initial navigation transition (`pending → idle`). All tab panels unmount and remount, and React Query's `querySignal` — which was previously in the `queryFn` — gets aborted and re-issued during the remount, causing a second fetch.
+- Fix: removing `querySignal` from `queryFn` (replaced by `getTabSignal`) eliminated the spurious second fetch. The custom signal is only aborted on tab close, not on React remount.
+
+### 21. Error handling for customer data fetch: `ApiError`, retry logic, `not-found-error` tab status
+
+**Files modified:**
+- `src/features/tabs/schemas/tab.schema.ts` — added `"idle"` and `"not-found-error"` to `TabStatusSchema`.
+- `src/features/tabs/store/tabs.store.ts` — default status is `"idle"` when not provided in `openTab`; `setActiveTabId` auto-closes tabs with `"not-found-error"` status when navigating away; `partialize` filters out `"not-found-error"` tabs so they are never persisted to localStorage.
+- `src/features/customer/api/query-options.ts` — added `retry` option: no retry on `ApiError` with `statusCode === 404`; up to 3 retries for other errors.
+- `src/features/customer/components/customer-tab-panel.tsx` — changed from `useSuspenseQuery` to `useQuery` with `enabled: !isNotFound` (checks both Zustand tab status and React Query cache for 404). Two `useEffect`s: one sets status to `"idle"` on success, one sets `"not-found-error"` or `"error"` on failure. Renders `<CustomerNotFoundPage />` for 404, `<CustomerErrorPage onRetry={refetch} />` for other errors.
+- `src/api/clients/api-client.ts` — propagates cancel errors silently (no console noise on tab close).
+- `src/routes/customers/$customerId.tsx` — loader skips prefetch if 404 already in React Query cache; `onEnter` sets initial status to `"loading"`.
+
+**Why:** 404 errors must be handled distinctly — the tab should show a "not found" page and auto-close when the user navigates away, rather than staying open and re-fetching on every revisit. Generic errors show a retry option. Not-found tabs are excluded from localStorage persistence since they'd just re-trigger a useless fetch on next load.
+
+### 22. `prefetchQuery` (non-blocking loader) instead of `ensureQueryData`
+
+**Files modified:**
+- `src/routes/customers/$customerId.tsx` — changed `loader` from `ensureQueryData` (await, blocks navigation) to `prefetchQuery` (fire-and-forget). Tab creation moved entirely to `onEnter`.
+
+**Why:** `ensureQueryData` caused a visible delay before the tab opened because navigation was blocked until the data loaded. With `prefetchQuery`, the tab opens immediately and the loading state is shown while data arrives. `onEnter` is the correct hook for tab creation (fires on actual navigation, not on hover pre-loading like `beforeLoad`).
+
+---
+
+## [2026-04-11] Session 6 — Tab Bar Rewrite: Custom Tab Bar, Scroll, Search, Refactoring
+
+### 23. Custom tab bar with dnd-kit drag & drop (replaced Cloudscape Tabs)
+
+**Files created:**
+- `src/features/tabs/components/new-tab-bar/new-tab-bar.tsx` — custom tab bar using `@dnd-kit/react` for drag & drop reordering. Click handling via event delegation (`onClickCapture` on `<ul>`). Tab activation + navigation on click; close + abort + redirect on close button.
+- `src/features/tabs/components/new-tab-bar/tab-item.tsx` — individual tab `<li>` with `useSortable` + `RestrictToHorizontalAxis` modifier. Semantic icon map (`TabIcon → Lucide`). Close button with `data-action="close"` + `data-tab-id` for event delegation.
+- `src/features/tabs/components/new-tab-bar/index.tsx` — barrel export.
+
+**Files modified:**
+- `src/features/navigation/components/app-navigation.tsx` — switched from Cloudscape `TabBar` to `NewTabBar`.
+- `src/features/tabs/store/tabs.store.ts` — added `reorderTabs(ids: string[])` action.
+
+**Why:** Cloudscape's `Tabs` component doesn't support drag & drop reordering. The custom implementation gives full control over styling, behavior, and extensibility.
+
+### 24. Tab drag order persisted in Zustand + localStorage
+
+**What changed:**
+- `handleDragEnd` in `NewTabBar` calls `reorderTabs(newOrder)` after a drag completes, persisting the new order to Zustand (and via `persist` middleware to localStorage).
+- Fixed TypeScript error: `DragEndEvent` is the callback type, not the event argument type. Uses `Parameters<DragEndEvent>[0]` for the argument type.
+- `isSortable` from `@dnd-kit/dom/sortable` used as type guard instead of `source as any`.
+
+**Why:** Without persisting to Zustand, tab order was reset on page refresh.
+
+### 25. Fixed `activePath` sync: moved effect from old `TabBar` to `NewTabBar`
+
+**What changed:**
+- The `activePath` sync `useEffect` (which updates the active tab's `activePath` when location changes) existed only in the old Cloudscape `TabBar`, which was commented out. Moved to `NewTabBar` (and later to `TabBar` after rename).
+- Only syncs the ACTIVE tab to avoid overwriting persisted `activePath` of inactive tabs.
+- Uses `maskedLocation.href` fallback for masked navigation.
+
+**Why:** Without this effect, `activePath` was never updated after the initial tab creation — sub-route navigation within a tab was not persisted.
+
+### 26. Horizontal scroll with arrow buttons (`useTabScroll` hook)
+
+**Files created:**
+- `src/features/tabs/hooks/use-tab-scroll.ts` — `useTabScroll(tabs, activeTabId)` hook. Manages: `canScrollLeft`/`canScrollRight` state; scroll listener + `ResizeObserver` on the scroll container (Effect 1, stable); scroll state update + active tab scroll-into-view on tabs/activeTab change (Effect 2). Debounced scroll-on-resize via `useDebouncedCallback` from `@tanstack/react-pacer` (150ms). Active tab scroll uses `getBoundingClientRect()` (not `offsetLeft`) for accurate positioning relative to the scroll container. 60px margin ensures active tab is never flush against the edge.
+- `src/features/tabs/components/tab-bar/tab-bar-styles.ts` — all styled components: `TabBarWrapper`, `ScrollArea`, `ScrollNavLeft`, `ScrollNavRight` (with directional `box-shadow` and border), `TabsList`, `NoMatchItem`.
+
+**Files modified:**
+- Tab bar component — wraps tabs in `ScrollArea` with `overflow-x: auto` + hidden scrollbar; `ScrollNavLeft`/`ScrollNavRight` buttons shown when overflow exists, disabled at scroll boundaries.
+
+**Key decisions:**
+- Both scroll buttons always rendered when any overflow exists (not just the relevant one) — avoids layout shift; each button individually disabled when at its boundary.
+- `box-shadow` applied only via `:not(:disabled)` — shadow visible only when tabs are hidden under that button.
+- `&:disabled > * { opacity: 0.3 }` fades only the icon child, not the button's `border-bottom` — keeps the bottom border line visually continuous.
+- Scroll threshold: `el.scrollLeft + el.clientWidth < el.scrollWidth` (no `-1` offset) — avoids false-negative disabled state due to sub-pixel rounding.
+- `getBoundingClientRect()` instead of `offsetLeft` for accurate scroll-into-view calculation regardless of intermediate CSS positioning context.
+- Debounced resize scroll (150ms) via `useDebouncedCallback` — scrolls active tab into view after viewport resize settles, without firing on every pixel.
+
+### 27. Tab bar component and folder refactored and renamed
+
+**Renames:**
+- Folder `src/features/tabs/components/new-tab-bar/` → `src/features/tabs/components/tab-bar/`
+- File `new-tab-bar.tsx` → `tab-bar.tsx`, export `NewTabBar` → `TabBar`
+- Hook moved to `src/features/tabs/hooks/use-tab-scroll.ts`
+
+**Deleted:**
+- Old Cloudscape `TabBar` (`src/features/tabs/components/tab-bar.tsx`) — replaced by custom implementation.
+- `src/features/tabs/components/no-match-indicator.tsx` — replaced by `NoMatchItem` (styled `<li>`) in `tab-bar-styles.ts`.
+
+**Files modified:**
+- `src/features/tabs/components/tab-bar/index.tsx` — updated re-export.
+- `src/features/tabs/index.ts` — updated barrel to point to new folder.
+- `src/features/navigation/components/app-navigation.tsx` — imports from barrel (`@/features/tabs`), removed commented code.
+
+### 28. Tab search with filtering, lifted state, and reset on outside click
+
+**Files modified:**
+- `src/features/tabs/components/tab-search.tsx` — now a fully controlled component: `active`, `onToggle`, `query`, `onChange` as props. State no longer owned internally. Removed Cloudscape `Input` focus ring via `box-shadow: none !important` targeting `[class*="awsui_input"]`.
+- `src/features/tabs/components/tab-bar/tab-bar.tsx` — owns `searchActive` and `searchQuery` state; computes `visibleTabs` by filtering `tabs` on `searchQuery`; passes all four props to `TabSearch`; resets search in `handleClick` after tab activation; adds `handleTabBarBlur` (resets search when focus leaves `TabBarWrapper` via `event.currentTarget.contains(event.relatedTarget)`).
+- `src/features/tabs/components/tab-bar/tab-item.tsx` — added `tabIndex={-1}` to `StyledListItem` and `title={`Close ${tab.label}`}` to `CloseButton`.
+
+**Why (state lifting):** `active` and `query` are related state that must be reset together. Previously `active` lived in `TabSearch` (uncontrolled) while `query` was controlled from `TabBar` — a mixed pattern. Lifting `active` to `TabBar` makes the component fully controlled, enables resetting both states atomically from the parent, and avoids the blur-before-click race condition that caused tab navigation to fail when search was open.
+
+**Why (`tabIndex={-1}`):** `onBlur`'s `relatedTarget` is `null` for non-focusable elements. Without `tabIndex`, clicking a tab while search is active would set `relatedTarget = null` → `contains(null) = false` → premature search reset → tabs re-render → click misses. `tabIndex={-1}` makes `<li>` focusable on click (not in keyboard tab order) so `relatedTarget` = the `<li>` → `contains()` = true → no reset. Reset happens cleanly in `handleClick` instead.
+
+---
+
+## Architecture Decisions Log (continued)
+
+### ADR-013: Fully Controlled TabSearch — State Lifted to TabBar
+- **Decision:** `TabSearch` is a fully controlled component. Both `active` (input visible/hidden) and `query` (search string) are owned by `TabBar`, not by `TabSearch` itself.
+- **Status:** Implemented (Session 6)
+- **Context:** Originally `active` was internal to `TabSearch` (uncontrolled) while `query` was controlled from `TabBar`. This mixed pattern prevented atomic reset of both states from the parent. The user discovered that resetting `active` in `handleClick` (after tab navigation) was the cleanest fix for the blur-before-click race condition — but this required `active` to be owned by the parent. Lifting state eliminated the bug without any event ordering hacks, timeouts, or effects.
+
+### ADR-014: Per-Tab AbortControllers Decoupled from React Query
+- **Decision:** HTTP request cancellation uses a custom per-tab `AbortController` map, not React Query's internal `querySignal`.
+- **Status:** Implemented (Session 5)
+- **Context:** React Query aborts its `querySignal` on component unmount. Since tab panels unmount during React's initial render cycle (root component remount during router `pending → idle` transition), using `querySignal` caused spurious double-fetches. The custom controller is only aborted on explicit tab close (`abortTab(resourceId)`), making cancellation intentional and predictable.
+
 ## Next Steps
-- **Phase 2 (remaining):** Tab state restore on app mount (navigate to last active tab on remount)
-- **Phase 3:** Amazon Connect integration layer (@amazon-connect/app SDK)
+- **Phase 4:** Wire Amazon Connect contact events to tab system
+- **Phase 5:** Additional Connect clients (File, Activity, QuickResponses, MessageTemplate, User)
+- **Hash-based sub-navigation:** Already partially implemented via `activePath` with hash; may need dedicated sub-navigation components

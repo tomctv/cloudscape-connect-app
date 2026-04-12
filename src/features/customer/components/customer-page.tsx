@@ -1,60 +1,91 @@
-import {
-  AppLayoutToolbar,
-  ContentLayout,
-  SpaceBetween,
-} from "@cloudscape-design/components";
-import { Outlet } from "@tanstack/react-router";
-import { useState } from "react";
+import { Box, SpaceBetween } from "@cloudscape-design/components";
+import { useState, useCallback, useEffect } from "react";
 import { CustomerNavbar } from "./customer-navbar";
 import { CustomerHeader } from "./customer-header";
 import { CustomerInformationCard } from "./customer-information-card";
+import { CustomerContactHistoryPage } from "@/features/customer-contact-history/components/customer-contact-history-page";
+import { useTabsStore } from "@/features/tabs";
 
-export const CustomerPage: React.FC = () => {
+// Valid hash sections for the customer page
+type CustomerSection = "overview" | "contacts";
+
+const VALID_SECTIONS: CustomerSection[] = ["overview", "contacts"];
+
+/**
+ * Extracts the section from a path's hash fragment.
+ * Returns "overview" if the hash is empty or invalid.
+ */
+function parseSectionFromPath(path: string): CustomerSection {
+  const hashIndex = path.indexOf("#");
+  if (hashIndex === -1) return "overview";
+  const hash = path.slice(hashIndex + 1);
+  return VALID_SECTIONS.includes(hash as CustomerSection)
+    ? (hash as CustomerSection)
+    : "overview";
+}
+
+interface CustomerPageProps {
+  customerId: string;
+  tabId: string;
+}
+
+export const CustomerPage: React.FC<CustomerPageProps> = ({
+  customerId,
+  tabId,
+}) => {
   const [activeDrawerId, setActiveDrawerId] = useState<string | null>(null);
+  const activePath = useTabsStore(
+    (s) => s.tabs.find((t) => t.id === tabId)?.activePath ?? "",
+  );
+  const [activeSection, setActiveSection] = useState<CustomerSection>(() =>
+    parseSectionFromPath(activePath),
+  );
+  const updateTab = useTabsStore((s) => s.updateTab);
+
+  // Keep activeSection in sync when activePath changes externally
+  // (e.g., the tab-bar sync effect updates it from the browser URL)
+  useEffect(() => {
+    const section = parseSectionFromPath(activePath);
+    setActiveSection((prev) => (prev !== section ? section : prev));
+  }, [activePath]);
+
+  const handleSectionChange = useCallback(
+    (sectionId: string) => {
+      const section = sectionId as CustomerSection;
+
+      setActiveSection(section);
+
+      // Update the URL hash and store's activePath
+      const hash = section === "overview" ? "" : `#${section}`;
+      const newPath = `/customers/${customerId}${hash}`;
+      window.history.replaceState(null, "", newPath);
+      updateTab(tabId, { activePath: newPath });
+    },
+    [customerId, tabId, updateTab],
+  );
 
   return (
     <div>
       <CustomerNavbar
+        customerId={customerId}
         notesOpen={activeDrawerId === "customer-notes"}
         onNotesToggle={() =>
           setActiveDrawerId((prev) =>
             prev === "customer-notes" ? null : "customer-notes",
           )
         }
+        onSectionChange={handleSectionChange}
       />
-      <AppLayoutToolbar
-        navigationHide
-        toolsHide
-        content={
-          <ContentLayout header={<CustomerHeader />}>
-            <SpaceBetween size="l">
-              <CustomerInformationCard />
-              <Outlet />
-            </SpaceBetween>
-          </ContentLayout>
-        }
-        navigationTriggerHide
-        activeDrawerId={activeDrawerId}
-        onDrawerChange={({ detail }) =>
-          setActiveDrawerId(detail.activeDrawerId)
-        }
-        drawers={[
-          {
-            id: "customer-notes",
-            badge: true,
-            content: <div>Customer notes</div>,
-            defaultSize: 350,
-            preserveInactiveContent: true,
-            ariaLabels: {
-              drawerName: "Notes",
-              triggerButton: "Notes",
-              closeButton: "Close notes",
-              resizeHandleTooltipText: "Resize notes",
-              resizeHandle: "Resize",
-            },
-          },
-        ]}
-      />
+      <Box padding={{ horizontal: "l", vertical: "s" }}>
+        <SpaceBetween size="l">
+          <CustomerHeader customerId={customerId} />
+          <CustomerInformationCard customerId={customerId} />
+
+          {activeSection === "contacts" && (
+            <CustomerContactHistoryPage customerId={customerId} />
+          )}
+        </SpaceBetween>
+      </Box>
     </div>
   );
 };

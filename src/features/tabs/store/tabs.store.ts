@@ -3,6 +3,7 @@ import { persist } from "zustand/middleware";
 import {
   type Tab,
   type TabIcon,
+  type TabStatus,
   type TabType,
   TabsPersistedStateSchema,
 } from "../schemas/tab.schema";
@@ -33,6 +34,7 @@ interface TabsActions {
     icon?: TabIcon;
     isPinned?: boolean;
     closable?: boolean;
+    status?: TabStatus;
   }) => string;
 
   /** Close a tab by ID. If the closed tab was active, activates an adjacent tab. */
@@ -51,7 +53,10 @@ interface TabsActions {
   updateTab: (
     id: string,
     updates: Partial<
-      Pick<Tab, "label" | "activePath" | "icon" | "status" | "isPinned" | "closable">
+      Pick<
+        Tab,
+        "label" | "activePath" | "icon" | "status" | "isPinned" | "closable"
+      >
     >,
   ) => void;
 
@@ -77,7 +82,17 @@ export const useTabsStore = create<TabsState & TabsActions>()(
     (set, get) => ({
       ...initialState,
 
-      openTab: ({ id, type, resourceId, label, basePath, icon, isPinned, closable }) => {
+      openTab: ({
+        id,
+        type,
+        resourceId,
+        label,
+        basePath,
+        icon,
+        isPinned,
+        closable,
+        status
+      }) => {
         const { tabs } = get();
         const now = Date.now();
         const existing = tabs.find((tab) => tab.id === id);
@@ -105,6 +120,7 @@ export const useTabsStore = create<TabsState & TabsActions>()(
           closable,
           lastAccessedAt: now,
           createdAt: now,
+          status: status ?? "idle",
         };
 
         set({
@@ -150,19 +166,30 @@ export const useTabsStore = create<TabsState & TabsActions>()(
       },
 
       setActiveTabId: (id) => {
+        const { tabs, activeTabId } = get();
+
+        // Auto-close error tabs when navigating away from them.
+        // This avoids persisting tabs for non-existent resources in localStorage.
+        let nextTabs = tabs;
+        if (activeTabId && activeTabId !== id) {
+          const prevTab = tabs.find((t) => t.id === activeTabId);
+          if (prevTab?.status === "not-found-error") {
+            nextTabs = tabs.filter((t) => t.id !== activeTabId);
+          }
+        }
+
         if (id === null) {
-          set({ activeTabId: null });
+          set({ activeTabId: null, tabs: nextTabs });
           return;
         }
 
-        const { tabs } = get();
-        const tab = tabs.find((t) => t.id === id);
+        const tab = nextTabs.find((t) => t.id === id);
         if (!tab) return;
 
         const now = Date.now();
         set({
           activeTabId: id,
-          tabs: tabs.map((t) =>
+          tabs: nextTabs.map((t) =>
             t.id === id ? { ...t, lastAccessedAt: now } : t,
           ),
         });
@@ -214,7 +241,7 @@ export const useTabsStore = create<TabsState & TabsActions>()(
       // Only persist data, not actions
       partialize: (state) => ({
         version: 1 as const,
-        tabs: state.tabs,
+        tabs: state.tabs.filter((t) => t.status !== "not-found-error"),
         activeTabId: state.activeTabId,
       }),
     },

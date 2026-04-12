@@ -1,13 +1,14 @@
 import apiClient, { ApiError } from "@/api/clients/api-client";
 import { queryOptions } from "@tanstack/react-query";
 import { CustomerSchema } from "../schemas/customer.schema";
+import { getTabSignal } from "@/features/tabs/store/tab-abort-controllers";
 
-export const customerQueryOptions = (customerId: string, signal?: AbortSignal) =>
+export const customerQueryOptions = (customerId: string) =>
   queryOptions({
     queryKey: ["customers", customerId],
-    queryFn: async ({ signal: querySignal }) => {
+    queryFn: async () => {
       const data = await apiClient.get(`/customers/${customerId}`, {
-        signal: signal ?? querySignal,
+        signal: getTabSignal(customerId),
       });
       return CustomerSchema.parse(data);
     },
