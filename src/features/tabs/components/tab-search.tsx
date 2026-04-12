@@ -1,9 +1,9 @@
-import { Box, Button, Input } from "@cloudscape-design/components";
+import { Button, Input } from "@cloudscape-design/components";
 import {
   colorBorderDividerDefault,
-  colorBorderDividerSecondary,
   spaceScaledXs,
   colorTextBodyDefault,
+  spaceScaledXxs,
 } from "@cloudscape-design/design-tokens";
 import styled from "styled-components";
 
@@ -19,12 +19,52 @@ const TabSearchContainer = styled.div`
   align-items: center;
   gap: ${spaceScaledXs};
   border-bottom: 1px solid ${colorBorderDividerDefault};
-  padding: 1px 0;
 `;
 
-const StyledBox = styled(Box)`
+const ToggleContainer = styled.div`
+  position: relative;
   border-left: 1px solid transparent;
-  border-right: 1px solid ${colorBorderDividerSecondary};
+  padding: 0 ${spaceScaledXxs};
+
+  &::after {
+    content: "";
+    position: absolute;
+    z-index: 2;
+    right: -2px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 1px;
+    height: 20px;
+    background-color: ${colorBorderDividerDefault};
+  }
+`;
+
+const InputContainer = styled.div`
+  position: relative;
+  margin-left: -1px;
+
+  &::after {
+    content: "";
+    position: absolute;
+    z-index: 0;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 1px;
+    height: 20px;
+    background-color: ${colorBorderDividerDefault};
+  }
+
+  [class*="awsui_input"] {
+    border-color: transparent !important;
+    outline-color: transparent !important;
+    box-shadow: none !important;
+
+    input {
+      border-color: transparent !important;
+      outline-color: transparent !important;
+    }
+  }
 `;
 
 export const TabSearch: React.FC<TabSearchProps> = ({
@@ -43,18 +83,19 @@ export const TabSearch: React.FC<TabSearchProps> = ({
   return (
     <TabSearchContainer>
       {!active && (
-        <StyledBox padding={{ horizontal: "xxs" }}>
+        <ToggleContainer>
           <Button
             variant="icon"
             iconName="search"
             ariaLabel="Tab search"
             onClick={() => onToggle(true)}
           />
-        </StyledBox>
+        </ToggleContainer>
       )}
       {active && (
-        <div style={{ paddingRight: "4px" }}>
+        <InputContainer>
           <Input
+            name="tab-name"
             onChange={({ detail }) => onChange(detail.value)}
             value={query}
             placeholder="Search tabs"
@@ -63,6 +104,8 @@ export const TabSearch: React.FC<TabSearchProps> = ({
               root: {
                 borderColor: {
                   default: "transparent",
+                  focus: "transparent",
+                  hover: "transparent",
                 },
                 color: {
                   hover: colorTextBodyDefault,
@@ -72,7 +115,7 @@ export const TabSearch: React.FC<TabSearchProps> = ({
             onKeyDown={handleKeyDown}
             autoFocus
           />
-        </div>
+        </InputContainer>
       )}
     </TabSearchContainer>
   );

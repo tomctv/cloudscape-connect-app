@@ -145,6 +145,7 @@ export const TabItem: React.FC<TabItemProps> = ({ tab, index, isActive }) => {
             data-action="close"
             data-tab-id={tab.id}
             aria-label={`Close ${tab.label}`}
+            title={`Close ${tab.label}`}
           >
             <Icon name="close" />
           </CloseButton>

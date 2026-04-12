@@ -7,7 +7,7 @@ import {
   colorTextInteractiveHover,
   fontFamilyBase,
   fontSizeBodyM,
-  spaceScaledXs,
+  spaceScaledS,
 } from "@cloudscape-design/design-tokens";
 
 export const TabBarWrapper = styled.div`
@@ -53,13 +53,17 @@ const scrollNavBase = `
 export const ScrollNavLeft = styled.button`
   ${scrollNavBase}
   border-right: 1px solid ${colorBorderDividerDefault};
-  box-shadow: 4px 0 8px rgba(0, 0, 0, 0.12);
+  &:not(:disabled) {
+    box-shadow: 4px 0 8px rgba(0, 0, 0, 0.12);
+  }
 `;
 
 export const ScrollNavRight = styled.button`
   ${scrollNavBase}
   border-left: 1px solid ${colorBorderDividerDefault};
-  box-shadow: -4px 0 8px rgba(0, 0, 0, 0.12);
+  &:not(:disabled) {
+    box-shadow: -4px 0 8px rgba(0, 0, 0, 0.12);
+  }
 `;
 
 /**
@@ -75,7 +79,7 @@ export const NoMatchItem = styled.div`
   white-space: nowrap;
   border-top: 1px solid transparent;
   border-bottom: 1px solid ${colorBorderDividerDefault};
-  padding: 10px ${spaceScaledXs};
+  padding: 10px ${spaceScaledS};
   font-family: ${fontFamilyBase};
   font-size: ${fontSizeBodyM};
   color: ${colorTextBodySecondary};
@@ -92,8 +96,14 @@ export const TabsList = styled.ul`
   padding-top: 4px;
   min-width: 100%;
 
+  li:first-child {
+    padding-left: 6px;
+    border-bottom: 1px solid ${colorBorderDividerDefault};
+  }
+
   li:last-child {
     border-bottom: 1px solid ${colorBorderDividerDefault};
+    padding-left: 12px;
     flex-grow: 1;
   }
 `;

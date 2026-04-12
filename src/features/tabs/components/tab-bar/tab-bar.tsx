@@ -191,6 +191,7 @@ export const TabBar: React.FC = () => {
           <ScrollArea ref={scrollRef}>
             <DragDropProvider onDragEnd={handleDragEnd}>
               <TabsList onClickCapture={handleClick}>
+                <li />
                 {visibleTabs.map((tab, index) => (
                   <TabItem
                     key={tab.id}

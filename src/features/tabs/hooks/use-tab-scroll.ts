@@ -77,7 +77,7 @@ export function useTabScroll(
 
     const updateScrollState = () => {
       setCanScrollLeft(el.scrollLeft > 0);
-      setCanScrollRight(el.scrollLeft < el.scrollWidth - el.clientWidth - 1);
+      setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth);
     };
 
     el.addEventListener("scroll", updateScrollState);
@@ -101,7 +101,7 @@ export function useTabScroll(
     if (!el) return;
 
     setCanScrollLeft(el.scrollLeft > 0);
-    setCanScrollRight(el.scrollLeft < el.scrollWidth - el.clientWidth - 1);
+    setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth);
 
     if (activeTabId) {
       const behavior: ScrollBehavior = isFirstRender.current
