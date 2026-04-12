@@ -16,7 +16,7 @@ import {
   NoMatchItem,
 } from "./tab-bar-styles";
 import { useTabScroll } from "../../hooks/use-tab-scroll";
-import { TabSearch } from "../tab-search";
+import { TabSearch } from "./tab-search";
 import type React from "react";
 
 /**
